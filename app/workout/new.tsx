@@ -1,53 +1,30 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Switch } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
-
-interface WorkoutSet {
-  setNumber: number;
-  reps: string;
-  weight: string;
-  notes: string;
-}
+import { BodyPartSelector } from "@/components/BodyPartSelector";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { SetCounter } from "@/components/SetCounter";
+import { BodyPartKey } from "@/utils/constants";
 
 export default function NewWorkoutScreen() {
   const router = useRouter();
-  const { exercises } = useExercises();
+  const { filteredExercises, selectedBodyPart, setSelectedBodyPart } = useExercises();
   const { createSession } = useWorkoutSessions();
+
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
-  const [mood, setMood] = useState<number>(3);
+  const [isBodyweight, setIsBodyweight] = useState(false);
+  const [weight, setWeight] = useState("");
+  const [reps, setReps] = useState("");
+  const [setCount, setSetCount] = useState(0);
+  const [difficulty, setDifficulty] = useState(3);
   const [notes, setNotes] = useState("");
-  const [sets, setSets] = useState<WorkoutSet[]>([
-    { setNumber: 1, reps: "", weight: "", notes: "" },
-  ]);
   const [saving, setSaving] = useState(false);
 
-  const activeExercises = exercises.filter((e) => e.isActive);
-
-  const moods = [
-    { value: 1, emoji: "😢", label: "很差" },
-    { value: 2, emoji: "😕", label: "不好" },
-    { value: 3, emoji: "😐", label: "普通" },
-    { value: 4, emoji: "🙂", label: "不錯" },
-    { value: 5, emoji: "😄", label: "很棒" },
-  ];
-
-  const addSet = () => {
-    setSets([...sets, { setNumber: sets.length + 1, reps: "", weight: "", notes: "" }]);
-  };
-
-  const removeSet = (index: number) => {
-    if (sets.length > 1) {
-      const newSets = sets.filter((_, i) => i !== index);
-      setSets(newSets.map((s, i) => ({ ...s, setNumber: i + 1 })));
-    }
-  };
-
-  const updateSet = (index: number, field: keyof WorkoutSet, value: string) => {
-    const newSets = [...sets];
-    newSets[index] = { ...newSets[index], [field]: value };
-    setSets(newSets);
+  const handleBodyPartChange = (bodyPart: BodyPartKey | null) => {
+    setSelectedBodyPart(bodyPart);
+    setSelectedExerciseId(null);
   };
 
   const handleSave = async () => {
@@ -56,9 +33,18 @@ export default function NewWorkoutScreen() {
       return;
     }
 
-    const validSets = sets.filter((s) => s.reps || s.weight);
-    if (validSets.length === 0) {
-      Alert.alert("提示", "請至少填寫一組數據");
+    if (setCount < 1) {
+      Alert.alert("提示", "請至少完成一組");
+      return;
+    }
+
+    if (!isBodyweight && (!weight || parseFloat(weight) <= 0)) {
+      Alert.alert("提示", "請輸入重量");
+      return;
+    }
+
+    if (!reps || parseInt(reps, 10) <= 0) {
+      Alert.alert("提示", "請輸入次數");
       return;
     }
 
@@ -67,15 +53,12 @@ export default function NewWorkoutScreen() {
       await createSession({
         exerciseId: selectedExerciseId,
         date: new Date().toISOString(),
-        mood,
+        weight: isBodyweight ? null : parseFloat(weight),
+        reps: parseInt(reps, 10),
+        setCount,
+        difficulty,
+        isBodyweight,
         notes: notes.trim() || null,
-        sets: validSets.map((s) => ({
-          setNumber: s.setNumber,
-          reps: s.reps ? parseInt(s.reps, 10) : null,
-          weight: s.weight ? parseFloat(s.weight) : null,
-          duration: null,
-          notes: s.notes.trim() || null,
-        })),
       });
       router.back();
     } catch {
@@ -88,19 +71,22 @@ export default function NewWorkoutScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-4">
-        {/* 選擇健身項目 */}
+        {/* 部位選擇 */}
+        <View className="mb-4">
+          <Text className="text-lg font-bold text-gray-700 mb-3">選擇部位</Text>
+          <BodyPartSelector value={selectedBodyPart} onChange={handleBodyPartChange} />
+        </View>
+
+        {/* 運動項目選擇 */}
         <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">選擇健身項目</Text>
-          {activeExercises.length === 0 ? (
+          <Text className="text-lg font-bold text-gray-700 mb-3">選擇項目</Text>
+          {filteredExercises.length === 0 ? (
             <View className="bg-white rounded-xl p-4">
-              <Text className="text-gray-500 text-center">還沒有健身項目</Text>
-              <TouchableOpacity className="mt-2" onPress={() => router.push("/exercise/new")}>
-                <Text className="text-primary-600 text-center">新增項目 →</Text>
-              </TouchableOpacity>
+              <Text className="text-gray-500 text-center">此部位沒有項目</Text>
             </View>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {activeExercises.map((exercise) => (
+              {filteredExercises.map((exercise) => (
                 <TouchableOpacity
                   key={exercise.id}
                   className={`px-4 py-3 rounded-xl mr-2 ${
@@ -125,91 +111,66 @@ export default function NewWorkoutScreen() {
           )}
         </View>
 
-        {/* 心情選擇 */}
+        {/* 重量設定 */}
         <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">今天感覺如何？</Text>
-          <View className="flex-row justify-around bg-white rounded-xl p-4">
-            {moods.map((m) => (
-              <TouchableOpacity
-                key={m.value}
-                className={`items-center p-2 rounded-lg ${
-                  mood === m.value ? "bg-primary-100" : ""
-                }`}
-                onPress={() => setMood(m.value)}
-              >
-                <Text className="text-3xl">{m.emoji}</Text>
-                <Text
-                  className={`text-xs mt-1 ${
-                    mood === m.value ? "text-primary-600 font-medium" : "text-gray-500"
-                  }`}
-                >
-                  {m.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <Text className="text-lg font-bold text-gray-700 mb-3">重量</Text>
+          <View className="bg-white rounded-xl p-4">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-gray-700">自體重量</Text>
+              <Switch value={isBodyweight} onValueChange={setIsBodyweight} />
+            </View>
+            {!isBodyweight && (
+              <View className="flex-row items-center">
+                <TextInput
+                  className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-lg"
+                  placeholder="0"
+                  keyboardType="decimal-pad"
+                  value={weight}
+                  onChangeText={setWeight}
+                />
+                <Text className="text-gray-600 text-lg ml-3">kg</Text>
+              </View>
+            )}
           </View>
         </View>
 
-        {/* 組數輸入 */}
+        {/* 次數設定 */}
         <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">運動組數</Text>
-          {sets.map((set, index) => (
-            <View key={index} className="bg-white rounded-xl p-4 mb-3">
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-lg font-medium text-gray-700">第 {set.setNumber} 組</Text>
-                {sets.length > 1 && (
-                  <TouchableOpacity onPress={() => removeSet(index)}>
-                    <Text className="text-red-500">移除</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              <View className="flex-row gap-3">
-                <View className="flex-1">
-                  <Text className="text-sm text-gray-500 mb-1">次數</Text>
-                  <TextInput
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-base"
-                    placeholder="0"
-                    keyboardType="number-pad"
-                    value={set.reps}
-                    onChangeText={(v) => updateSet(index, "reps", v)}
-                  />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sm text-gray-500 mb-1">重量 (kg)</Text>
-                  <TextInput
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-base"
-                    placeholder="0"
-                    keyboardType="decimal-pad"
-                    value={set.weight}
-                    onChangeText={(v) => updateSet(index, "weight", v)}
-                  />
-                </View>
-              </View>
-              <View className="mt-3">
-                <Text className="text-sm text-gray-500 mb-1">備註</Text>
-                <TextInput
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-base"
-                  placeholder="選填..."
-                  value={set.notes}
-                  onChangeText={(v) => updateSet(index, "notes", v)}
-                />
-              </View>
+          <Text className="text-lg font-bold text-gray-700 mb-3">每組次數</Text>
+          <View className="bg-white rounded-xl p-4">
+            <View className="flex-row items-center">
+              <TextInput
+                className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-lg"
+                placeholder="0"
+                keyboardType="number-pad"
+                value={reps}
+                onChangeText={setReps}
+              />
+              <Text className="text-gray-600 text-lg ml-3">下</Text>
             </View>
-          ))}
-          <TouchableOpacity
-            className="border-2 border-dashed border-gray-300 rounded-xl p-4 items-center"
-            onPress={addSet}
-          >
-            <Text className="text-gray-500">＋ 新增一組</Text>
-          </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 組數計數器 */}
+        <View className="mb-6">
+          <Text className="text-lg font-bold text-gray-700 mb-3">完成組數</Text>
+          <View className="bg-white rounded-xl p-6 items-center">
+            <SetCounter value={setCount} onChange={setSetCount} />
+          </View>
+        </View>
+
+        {/* 難易度選擇 */}
+        <View className="mb-6">
+          <Text className="text-lg font-bold text-gray-700 mb-3">今天難易度</Text>
+          <DifficultySelector value={difficulty} onChange={setDifficulty} />
         </View>
 
         {/* 備註 */}
         <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">整體備註</Text>
+          <Text className="text-lg font-bold text-gray-700 mb-3">備註</Text>
           <TextInput
             className="bg-white rounded-xl p-4 text-base min-h-24"
-            placeholder="記錄今天的運動心得..."
+            placeholder="記錄今天的訓練心得..."
             multiline
             textAlignVertical="top"
             value={notes}

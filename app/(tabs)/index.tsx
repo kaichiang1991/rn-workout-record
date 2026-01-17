@@ -5,6 +5,7 @@ import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
 import { useStats } from "@/hooks/useStats";
 import { StatsCard } from "@/components/charts/StatsCard";
+import { DIFFICULTY_LEVELS } from "@/utils/constants";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -28,9 +29,19 @@ export default function HomeScreen() {
     return exercise?.name || "未知項目";
   };
 
-  const getMoodEmoji = (mood: number | null) => {
-    const moods = ["😢", "😕", "😐", "🙂", "😄"];
-    return mood ? moods[mood - 1] : "❓";
+  const renderDifficultyDot = (difficulty: number | null, size: number = 24) => {
+    if (!difficulty) return <View className="w-6 h-6 rounded-full bg-gray-300" />;
+    const level = DIFFICULTY_LEVELS.find((l) => l.value === difficulty);
+    return (
+      <View
+        className="rounded-full"
+        style={{
+          width: size,
+          height: size,
+          backgroundColor: level?.color || "#9ca3af",
+        }}
+      />
+    );
   };
 
   const formatDate = (dateStr: string) => {
@@ -66,13 +77,17 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 心情統計 */}
+        {/* 平均難易度 */}
         {stats.averageMood > 0 && (
           <View className="bg-white rounded-xl p-4 mb-4">
-            <Text className="text-gray-700 font-medium mb-2">平均心情</Text>
+            <Text className="text-gray-700 font-medium mb-2">平均難易度</Text>
             <View className="flex-row items-center">
-              <Text className="text-3xl mr-2">{getMoodEmoji(Math.round(stats.averageMood))}</Text>
-              <Text className="text-gray-600">{stats.averageMood.toFixed(1)} / 5</Text>
+              {renderDifficultyDot(Math.round(stats.averageMood), 28)}
+              <Text className="text-gray-600 ml-2">
+                {DIFFICULTY_LEVELS.find((l) => l.value === Math.round(stats.averageMood))?.label ||
+                  ""}{" "}
+                ({stats.averageMood.toFixed(1)})
+              </Text>
             </View>
           </View>
         )}
@@ -119,7 +134,7 @@ export default function HomeScreen() {
                       </Text>
                     )}
                   </View>
-                  <Text className="text-2xl">{getMoodEmoji(session.mood)}</Text>
+                  {renderDifficultyDot(session.difficulty, 24)}
                 </View>
               </TouchableOpacity>
             ))

@@ -1,0 +1,51 @@
+import { View, Text, TouchableOpacity, Vibration } from "react-native";
+import { useRef } from "react";
+
+interface SetCounterProps {
+  value: number;
+  onChange: (value: number) => void;
+}
+
+export function SetCounter({ value, onChange }: SetCounterProps) {
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handlePress = () => {
+    onChange(value + 1);
+  };
+
+  const handleLongPress = () => {
+    if (value > 0) {
+      Vibration.vibrate(50);
+      onChange(value - 1);
+    }
+  };
+
+  const handlePressIn = () => {
+    longPressTimer.current = setTimeout(() => {
+      handleLongPress();
+    }, 500);
+  };
+
+  const handlePressOut = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  return (
+    <View className="items-center">
+      <TouchableOpacity
+        className="w-32 h-32 rounded-full bg-primary-500 items-center justify-center shadow-lg"
+        onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.8}
+      >
+        <Text className="text-white text-5xl font-bold">{value}</Text>
+      </TouchableOpacity>
+      <Text className="text-gray-600 text-lg mt-2">組</Text>
+      <Text className="text-gray-400 text-sm mt-1">點擊 +1 ｜ 長按 -1</Text>
+    </View>
+  );
+}
