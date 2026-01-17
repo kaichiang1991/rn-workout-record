@@ -1,20 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
-import { getDatabase, WorkoutSession, WorkoutSet, WorkoutSessionWithSets } from "@/db/client";
-
-interface CreateSetInput {
-  setNumber: number;
-  reps: number | null;
-  weight: number | null;
-  duration: number | null;
-  notes: string | null;
-}
+import { getDatabase, WorkoutSession } from "@/db/client";
 
 interface CreateSessionInput {
   exerciseId: number;
   date: string;
-  mood: number | null;
+  weight: number | null;
+  reps: number;
+  setCount: number;
+  difficulty: number;
+  isBodyweight: boolean;
   notes: string | null;
-  sets: CreateSetInput[];
 }
 
 interface UseWorkoutSessionsOptions {
@@ -60,52 +55,44 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
     fetchSessions();
   }, [fetchSessions]);
 
-  const getSessionById = useCallback(async (id: number): Promise<WorkoutSessionWithSets | null> => {
+  const getSessionById = useCallback(async (id: number): Promise<WorkoutSession | null> => {
     const db = await getDatabase();
     const session = await db.getFirstAsync<WorkoutSession>(
       "SELECT * FROM workout_sessions WHERE id = ?",
       [id]
     );
-
-    if (!session) return null;
-
-    const sets = await db.getAllAsync<WorkoutSet>(
-      "SELECT * FROM workout_sets WHERE sessionId = ? ORDER BY setNumber ASC",
-      [id]
-    );
-
-    return { ...session, sets };
+    return session || null;
   }, []);
 
   const createSession = useCallback(async (input: CreateSessionInput): Promise<WorkoutSession> => {
     const db = await getDatabase();
 
-    // 建立 session
     const sessionResult = await db.runAsync(
-      "INSERT INTO workout_sessions (exerciseId, date, mood, notes) VALUES (?, ?, ?, ?)",
-      [input.exerciseId, input.date, input.mood, input.notes]
+      `INSERT INTO workout_sessions
+       (exerciseId, date, weight, reps, setCount, difficulty, isBodyweight, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        input.exerciseId,
+        input.date,
+        input.isBodyweight ? null : input.weight,
+        input.reps,
+        input.setCount,
+        input.difficulty,
+        input.isBodyweight ? 1 : 0,
+        input.notes,
+      ]
     );
 
-    const sessionId = sessionResult.lastInsertRowId;
-
-    // 建立 sets
-    for (const set of input.sets) {
-      await db.runAsync(
-        "INSERT INTO workout_sets (sessionId, setNumber, reps, weight, duration, notes) VALUES (?, ?, ?, ?, ?, ?)",
-        [sessionId, set.setNumber, set.reps, set.weight, set.duration, set.notes]
-      );
-    }
-
     const newSession: WorkoutSession = {
-      id: sessionId,
+      id: sessionResult.lastInsertRowId,
       exerciseId: input.exerciseId,
       date: input.date,
-      mood: input.mood,
-      weight: null,
-      reps: null,
-      setCount: null,
-      difficulty: null,
-      isBodyweight: 0,
+      mood: null,
+      weight: input.isBodyweight ? null : input.weight,
+      reps: input.reps,
+      setCount: input.setCount,
+      difficulty: input.difficulty,
+      isBodyweight: input.isBodyweight ? 1 : 0,
       notes: input.notes,
       createdAt: new Date().toISOString(),
     };
@@ -116,9 +103,6 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
 
   const deleteSession = useCallback(async (id: number): Promise<void> => {
     const db = await getDatabase();
-    // 先刪除相關的 sets
-    await db.runAsync("DELETE FROM workout_sets WHERE sessionId = ?", [id]);
-    // 刪除 session
     await db.runAsync("DELETE FROM workout_sessions WHERE id = ?", [id]);
 
     setSessions((prev) => prev.filter((s) => s.id !== id));
