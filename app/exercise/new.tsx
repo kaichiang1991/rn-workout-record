@@ -2,24 +2,27 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from "reac
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { useExercises } from "@/hooks/useExercises";
+import { CATEGORIES } from "@/utils/constants";
+import { Icon } from "@/components/Icon";
 
-const categories = [
-  { value: "chest", label: "胸部", icon: "🫁" },
-  { value: "back", label: "背部", icon: "🔙" },
-  { value: "legs", label: "腿部", icon: "🦵" },
-  { value: "shoulders", label: "肩膀", icon: "💪" },
-  { value: "arms", label: "手臂", icon: "💪" },
-  { value: "core", label: "核心", icon: "🎯" },
-  { value: "cardio", label: "有氧", icon: "🏃" },
-  { value: "other", label: "其他", icon: "🏋️" },
-];
+const categories = Object.entries(CATEGORIES).map(([value, { label, icon }]) => ({
+  value,
+  label,
+  icon,
+}));
 
 export default function NewExerciseScreen() {
   const router = useRouter();
   const { createExercise } = useExercises();
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("other");
+  const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>([]);
   const [description, setDescription] = useState("");
+
+  const toggleBodyPart = (value: string) => {
+    setSelectedBodyParts((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -28,11 +31,16 @@ export default function NewExerciseScreen() {
       return;
     }
 
+    if (selectedBodyParts.length === 0) {
+      Alert.alert("提示", "請至少選擇一個分類");
+      return;
+    }
+
     setSaving(true);
     try {
       await createExercise({
         name: name.trim(),
-        category,
+        bodyParts: selectedBodyParts,
         description: description.trim() || null,
       });
       router.back();
@@ -60,24 +68,27 @@ export default function NewExerciseScreen() {
 
         {/* 分類 */}
         <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">分類</Text>
+          <Text className="text-lg font-bold text-gray-700 mb-3">分類（可多選）</Text>
           <View className="flex-row flex-wrap">
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat.value}
-                className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
-                  category === cat.value ? "bg-primary-500" : "bg-white border border-gray-200"
-                }`}
-                onPress={() => setCategory(cat.value)}
-              >
-                <Text className="mr-1">{cat.icon}</Text>
-                <Text
-                  className={category === cat.value ? "text-white font-medium" : "text-gray-700"}
+            {categories.map((cat) => {
+              const isSelected = selectedBodyParts.includes(cat.value);
+              return (
+                <TouchableOpacity
+                  key={cat.value}
+                  className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
+                    isSelected ? "bg-primary-500" : "bg-white border border-gray-200"
+                  }`}
+                  onPress={() => toggleBodyPart(cat.value)}
                 >
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <View className="mr-1">
+                    <Icon name={cat.icon} size={16} color={isSelected ? "#ffffff" : "#374151"} />
+                  </View>
+                  <Text className={isSelected ? "text-white font-medium" : "text-gray-700"}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
