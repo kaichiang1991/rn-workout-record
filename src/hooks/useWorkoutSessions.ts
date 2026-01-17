@@ -101,6 +101,11 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
       exerciseId: input.exerciseId,
       date: input.date,
       mood: input.mood,
+      weight: null,
+      reps: null,
+      setCount: null,
+      difficulty: null,
+      isBodyweight: 0,
       notes: input.notes,
       createdAt: new Date().toISOString(),
     };

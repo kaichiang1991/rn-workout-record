@@ -51,6 +51,45 @@ export async function initDatabase(): Promise<void> {
     );
   `);
 
+  // 建立 ExerciseBodyParts 關聯表
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS exercise_body_parts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      exerciseId INTEGER NOT NULL,
+      bodyPart TEXT NOT NULL,
+      FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
+    );
+  `);
+
+  // 遷移：新增 workout_sessions 欄位
+  const columns = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(workout_sessions)"
+  );
+  const columnNames = columns.map((c) => c.name);
+
+  if (!columnNames.includes("weight")) {
+    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN weight REAL");
+  }
+  if (!columnNames.includes("reps")) {
+    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN reps INTEGER");
+  }
+  if (!columnNames.includes("setCount")) {
+    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN setCount INTEGER");
+  }
+  if (!columnNames.includes("difficulty")) {
+    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN difficulty INTEGER");
+  }
+  if (!columnNames.includes("isBodyweight")) {
+    await database.execAsync(
+      "ALTER TABLE workout_sessions ADD COLUMN isBodyweight INTEGER DEFAULT 0"
+    );
+  }
+
+  // 遷移：將現有 mood 資料複製到 difficulty
+  await database.execAsync(
+    "UPDATE workout_sessions SET difficulty = mood WHERE difficulty IS NULL AND mood IS NOT NULL"
+  );
+
   // 檢查是否需要加入預設資料
   const result = await database.getFirstAsync<{ count: number }>(
     "SELECT COUNT(*) as count FROM exercises"
@@ -63,25 +102,33 @@ export async function initDatabase(): Promise<void> {
 
 async function seedDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
   const defaultExercises = [
-    { name: "深蹲", category: "legs", description: "經典下肢訓練動作" },
-    { name: "臥推", category: "chest", description: "胸部主要訓練動作" },
-    { name: "硬舉", category: "back", description: "全身性複合動作" },
-    { name: "肩推", category: "shoulders", description: "肩部訓練動作" },
-    { name: "引體向上", category: "back", description: "背部訓練經典動作" },
-    { name: "二頭彎舉", category: "arms", description: "二頭肌孤立訓練" },
-    { name: "三頭下壓", category: "arms", description: "三頭肌訓練" },
-    { name: "腿推", category: "legs", description: "腿部機械訓練" },
-    { name: "划船", category: "back", description: "背部水平拉動作" },
-    { name: "平板支撐", category: "core", description: "核心穩定訓練" },
-    { name: "跑步", category: "cardio", description: "有氧運動" },
-    { name: "飛鳥", category: "chest", description: "胸部孤立訓練" },
+    { name: "深蹲", bodyParts: ["legs"], description: "經典下肢訓練動作" },
+    { name: "臥推", bodyParts: ["chest"], description: "胸部主要訓練動作" },
+    { name: "硬舉", bodyParts: ["back", "legs"], description: "全身性複合動作" },
+    { name: "肩推", bodyParts: ["shoulders"], description: "肩部訓練動作" },
+    { name: "引體向上", bodyParts: ["back", "arms"], description: "背部訓練經典動作" },
+    { name: "二頭彎舉", bodyParts: ["arms"], description: "二頭肌孤立訓練" },
+    { name: "三頭下壓", bodyParts: ["arms"], description: "三頭肌訓練" },
+    { name: "腿推", bodyParts: ["legs"], description: "腿部機械訓練" },
+    { name: "划船", bodyParts: ["back"], description: "背部水平拉動作" },
+    { name: "平板支撐", bodyParts: ["core"], description: "核心穩定訓練" },
+    { name: "跑步", bodyParts: ["cardio"], description: "有氧運動" },
+    { name: "飛鳥", bodyParts: ["chest"], description: "胸部孤立訓練" },
   ];
 
   for (const exercise of defaultExercises) {
-    await database.runAsync(
+    const result = await database.runAsync(
       "INSERT INTO exercises (name, category, description, isActive) VALUES (?, ?, ?, 1)",
-      [exercise.name, exercise.category, exercise.description]
+      [exercise.name, exercise.bodyParts[0], exercise.description]
     );
+
+    // 插入部位關聯
+    for (const bodyPart of exercise.bodyParts) {
+      await database.runAsync(
+        "INSERT INTO exercise_body_parts (exerciseId, bodyPart) VALUES (?, ?)",
+        [result.lastInsertRowId, bodyPart]
+      );
+    }
   }
 }
 
@@ -99,9 +146,20 @@ export interface WorkoutSession {
   id: number;
   exerciseId: number;
   date: string;
-  mood: number | null;
+  mood: number | null; // 保留相容性
+  weight: number | null;
+  reps: number | null;
+  setCount: number | null;
+  difficulty: number | null;
+  isBodyweight: number; // SQLite 使用 0/1
   notes: string | null;
   createdAt: string;
+}
+
+export interface ExerciseBodyPart {
+  id: number;
+  exerciseId: number;
+  bodyPart: string;
 }
 
 export interface WorkoutSet {
