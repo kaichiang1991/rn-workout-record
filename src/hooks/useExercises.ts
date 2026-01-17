@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { getDatabase, Exercise } from "@/db/client";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { getDatabase, Exercise, ExerciseBodyPart } from "@/db/client";
+import { BodyPartKey } from "@/utils/constants";
 
 interface CreateExerciseInput {
   name: string;
@@ -16,6 +17,8 @@ interface UpdateExerciseInput {
 
 export function useExercises() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [exerciseBodyParts, setExerciseBodyParts] = useState<ExerciseBodyPart[]>([]);
+  const [selectedBodyPart, setSelectedBodyPart] = useState<BodyPartKey | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -32,6 +35,11 @@ export function useExercises() {
         isActive: Boolean(r.isActive),
       }));
       setExercises(mappedResults);
+
+      // 取得所有部位關聯
+      const bodyParts = await db.getAllAsync<ExerciseBodyPart>("SELECT * FROM exercise_body_parts");
+      setExerciseBodyParts(bodyParts);
+
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Unknown error"));
@@ -122,13 +130,48 @@ export function useExercises() {
     setExercises((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
+  // 依部位篩選運動項目
+  const getExercisesByBodyPart = useCallback(
+    (bodyPart: BodyPartKey | null): Exercise[] => {
+      if (!bodyPart) return exercises.filter((e) => e.isActive);
+
+      const exerciseIds = exerciseBodyParts
+        .filter((bp) => bp.bodyPart === bodyPart)
+        .map((bp) => bp.exerciseId);
+
+      return exercises.filter((e) => e.isActive && exerciseIds.includes(e.id));
+    },
+    [exercises, exerciseBodyParts]
+  );
+
+  // 取得運動項目的所有部位
+  const getBodyPartsForExercise = useCallback(
+    (exerciseId: number): string[] => {
+      return exerciseBodyParts
+        .filter((bp) => bp.exerciseId === exerciseId)
+        .map((bp) => bp.bodyPart);
+    },
+    [exerciseBodyParts]
+  );
+
+  const filteredExercises = useMemo(
+    () => getExercisesByBodyPart(selectedBodyPart),
+    [selectedBodyPart, getExercisesByBodyPart]
+  );
+
   return {
     exercises,
+    filteredExercises,
+    exerciseBodyParts,
     loading,
     error,
+    selectedBodyPart,
+    setSelectedBodyPart,
     refresh: fetchExercises,
     createExercise,
     updateExercise,
     deleteExercise,
+    getExercisesByBodyPart,
+    getBodyPartsForExercise,
   };
 }
