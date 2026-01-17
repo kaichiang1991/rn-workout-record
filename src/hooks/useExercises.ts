@@ -4,7 +4,7 @@ import { BodyPartKey } from "@/utils/constants";
 
 interface CreateExerciseInput {
   name: string;
-  category: string;
+  bodyParts: string[]; // 改成陣列
   description: string | null;
 }
 
@@ -54,21 +54,41 @@ export function useExercises() {
 
   const createExercise = useCallback(async (input: CreateExerciseInput): Promise<Exercise> => {
     const db = await getDatabase();
+    const primaryCategory = input.bodyParts[0] || "other";
+
     const result = await db.runAsync(
       "INSERT INTO exercises (name, category, description, isActive) VALUES (?, ?, ?, 1)",
-      [input.name, input.category, input.description]
+      [input.name, primaryCategory, input.description]
     );
+
+    // 插入所有部位關聯
+    for (const bodyPart of input.bodyParts) {
+      await db.runAsync("INSERT INTO exercise_body_parts (exerciseId, bodyPart) VALUES (?, ?)", [
+        result.lastInsertRowId,
+        bodyPart,
+      ]);
+    }
 
     const newExercise: Exercise = {
       id: result.lastInsertRowId,
       name: input.name,
-      category: input.category,
+      category: primaryCategory,
       description: input.description,
       createdAt: new Date().toISOString(),
       isActive: true,
     };
 
+    // 更新本地狀態
     setExercises((prev) => [...prev, newExercise].sort((a, b) => a.name.localeCompare(b.name)));
+    setExerciseBodyParts((prev) => [
+      ...prev,
+      ...input.bodyParts.map((bp, idx) => ({
+        id: -Date.now() - idx, // 暫時 ID，下次 fetch 會更新
+        exerciseId: result.lastInsertRowId,
+        bodyPart: bp,
+      })),
+    ]);
+
     return newExercise;
   }, []);
 
