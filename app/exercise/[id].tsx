@@ -2,41 +2,45 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Switch } fr
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useExercises } from "@/hooks/useExercises";
+import { CATEGORIES } from "@/utils/constants";
+import { Icon } from "@/components/Icon";
 
-const categories = [
-  { value: "chest", label: "胸部", icon: "🫁" },
-  { value: "back", label: "背部", icon: "🔙" },
-  { value: "legs", label: "腿部", icon: "🦵" },
-  { value: "shoulders", label: "肩膀", icon: "💪" },
-  { value: "arms", label: "手臂", icon: "💪" },
-  { value: "core", label: "核心", icon: "🎯" },
-  { value: "cardio", label: "有氧", icon: "🏃" },
-  { value: "other", label: "其他", icon: "🏋️" },
-];
+const categories = Object.entries(CATEGORIES).map(([value, { label, icon }]) => ({
+  value,
+  label,
+  icon,
+}));
 
 export default function EditExerciseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { exercises, updateExercise, deleteExercise } = useExercises();
+  const { exercises, updateExercise, deleteExercise, getBodyPartsForExercise } = useExercises();
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("other");
+  const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const toggleBodyPart = (value: string) => {
+    setSelectedBodyParts((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
+
   useEffect(() => {
     const exercise = exercises.find((e) => e.id === parseInt(id!, 10));
     if (exercise) {
       setName(exercise.name);
-      setCategory(exercise.category || "other");
+      const bodyParts = getBodyPartsForExercise(exercise.id);
+      setSelectedBodyParts(bodyParts.length > 0 ? bodyParts : [exercise.category || "other"]);
       setDescription(exercise.description || "");
       setIsActive(exercise.isActive);
       setLoading(false);
     } else if (exercises.length > 0) {
       setLoading(false);
     }
-  }, [id, exercises]);
+  }, [id, exercises, getBodyPartsForExercise]);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -44,11 +48,16 @@ export default function EditExerciseScreen() {
       return;
     }
 
+    if (selectedBodyParts.length === 0) {
+      Alert.alert("提示", "請至少選擇一個分類");
+      return;
+    }
+
     setSaving(true);
     try {
       await updateExercise(parseInt(id!, 10), {
         name: name.trim(),
-        category,
+        bodyParts: selectedBodyParts,
         description: description.trim() || null,
         isActive,
       });
@@ -106,24 +115,27 @@ export default function EditExerciseScreen() {
 
         {/* 分類 */}
         <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">分類</Text>
+          <Text className="text-lg font-bold text-gray-700 mb-3">分類（可多選）</Text>
           <View className="flex-row flex-wrap">
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat.value}
-                className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
-                  category === cat.value ? "bg-primary-500" : "bg-white border border-gray-200"
-                }`}
-                onPress={() => setCategory(cat.value)}
-              >
-                <Text className="mr-1">{cat.icon}</Text>
-                <Text
-                  className={category === cat.value ? "text-white font-medium" : "text-gray-700"}
+            {categories.map((cat) => {
+              const isSelected = selectedBodyParts.includes(cat.value);
+              return (
+                <TouchableOpacity
+                  key={cat.value}
+                  className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
+                    isSelected ? "bg-primary-500" : "bg-white border border-gray-200"
+                  }`}
+                  onPress={() => toggleBodyPart(cat.value)}
                 >
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <View className="mr-1">
+                    <Icon name={cat.icon} size={16} color={isSelected ? "#ffffff" : "#374151"} />
+                  </View>
+                  <Text className={isSelected ? "text-white font-medium" : "text-gray-700"}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
