@@ -6,6 +6,7 @@ import { useExercises } from "@/hooks/useExercises";
 import { useStats } from "@/hooks/useStats";
 import { StatsCard } from "@/components/charts/StatsCard";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
+import { Icon } from "@/components/Icon";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -97,7 +98,9 @@ export default function HomeScreen() {
           className="bg-white rounded-xl p-4 mb-6 flex-row items-center justify-center border-2 border-primary-500"
           onPress={() => router.push("/workout/new")}
         >
-          <Text className="text-2xl mr-2">💪</Text>
+          <View className="mr-2">
+            <Icon name="dumbbell" size={24} color="#3b82f6" />
+          </View>
           <Text className="text-primary-600 text-lg font-semibold">開始新的運動紀錄</Text>
         </TouchableOpacity>
 
@@ -154,7 +157,7 @@ export default function HomeScreen() {
               title="累計運動次數"
               value={stats.totalCount}
               subtitle="持續努力中！"
-              icon="🏆"
+              icon="trophy"
               color="orange"
             />
           </View>

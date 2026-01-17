@@ -1,16 +1,14 @@
 import { Tabs } from "expo-router";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Icon, TAB_ICONS } from "../../src/components/Icon";
 
-function TabIcon({ name, focused: _focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    index: "🏠",
-    exercises: "💪",
-    history: "📋",
-  };
+function TabIcon({ name, focused }: { name: string; focused: boolean }) {
+  const iconName = TAB_ICONS[name] || "home";
+  const color = focused ? "#3b82f6" : "#9ca3af";
 
   return (
     <View className="items-center justify-center">
-      <Text className="text-xl">{icons[name] || "📌"}</Text>
+      <Icon name={iconName} size={24} color={color} />
     </View>
   );
 }

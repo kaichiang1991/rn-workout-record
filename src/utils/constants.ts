@@ -1,16 +1,17 @@
-export const MOOD_EMOJIS = ["😢", "😕", "😐", "🙂", "😄"] as const;
+import type { IconName } from "../components/Icon";
+
 export const MOOD_LABELS = ["很差", "不好", "普通", "不錯", "很棒"] as const;
 
-export const CATEGORIES = {
-  chest: { label: "胸部", icon: "🫁" },
-  back: { label: "背部", icon: "🔙" },
-  legs: { label: "腿部", icon: "🦵" },
-  shoulders: { label: "肩膀", icon: "💪" },
-  arms: { label: "手臂", icon: "💪" },
-  core: { label: "核心", icon: "🎯" },
-  cardio: { label: "有氧", icon: "🏃" },
-  other: { label: "其他", icon: "🏋️" },
-} as const;
+export const CATEGORIES: Record<string, { label: string; icon: IconName }> = {
+  chest: { label: "胸部", icon: "chest" },
+  back: { label: "背部", icon: "back" },
+  legs: { label: "腿部", icon: "legs" },
+  shoulders: { label: "肩膀", icon: "shoulders" },
+  arms: { label: "手臂", icon: "arms" },
+  core: { label: "核心", icon: "core" },
+  cardio: { label: "有氧", icon: "cardio" },
+  other: { label: "其他", icon: "other" },
+};
 
 export type CategoryKey = keyof typeof CATEGORIES;
 

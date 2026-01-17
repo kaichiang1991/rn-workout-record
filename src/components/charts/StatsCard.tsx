@@ -1,10 +1,11 @@
 import { View, Text } from "react-native";
+import { Icon, type IconName } from "../Icon";
 
 interface StatsCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon?: string;
+  icon?: IconName;
   color?: "primary" | "green" | "orange" | "purple";
 }
 
@@ -44,7 +45,7 @@ export function StatsCard({ title, value, subtitle, icon, color = "primary" }: S
         </View>
         {icon && (
           <View className={`${styles.iconBg} rounded-full p-2`}>
-            <Text className="text-lg">{icon}</Text>
+            <Icon name={icon} size={20} color="#ffffff" />
           </View>
         )}
       </View>

@@ -3,6 +3,8 @@ import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
+import { Icon } from "@/components/Icon";
+import { DIFFICULTY_LEVELS } from "@/utils/constants";
 
 export default function HistoryScreen() {
   const router = useRouter();
@@ -25,9 +27,10 @@ export default function HistoryScreen() {
     return exercise?.name || "未知項目";
   };
 
-  const getMoodEmoji = (mood: number | null) => {
-    const moods = ["😢", "😕", "😐", "🙂", "😄"];
-    return mood ? moods[mood - 1] : "❓";
+  const getDifficultyInfo = (difficulty: number | null) => {
+    if (!difficulty) return { label: "-", color: "#9ca3af" };
+    const level = DIFFICULTY_LEVELS.find((l) => l.value === difficulty);
+    return level || { label: "-", color: "#9ca3af" };
   };
 
   const formatDate = (dateStr: string) => {
@@ -69,7 +72,9 @@ export default function HistoryScreen() {
       <View className="p-4">
         {/* 搜尋列 */}
         <View className="bg-white rounded-xl mb-4 px-4 py-3 flex-row items-center shadow-sm">
-          <Text className="text-gray-400 mr-2">🔍</Text>
+          <View className="mr-2">
+            <Icon name="search" size={20} color="#9ca3af" />
+          </View>
           <TextInput
             className="flex-1 text-base text-gray-800"
             placeholder="搜尋運動紀錄..."
@@ -79,7 +84,7 @@ export default function HistoryScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Text className="text-gray-400">✕</Text>
+              <Icon name="x" size={20} color="#9ca3af" />
             </TouchableOpacity>
           )}
         </View>
@@ -155,7 +160,19 @@ export default function HistoryScreen() {
                         </Text>
                       )}
                     </View>
-                    <Text className="text-2xl">{getMoodEmoji(session.mood)}</Text>
+                    <View
+                      className="px-2 py-1 rounded"
+                      style={{
+                        backgroundColor: getDifficultyInfo(session.difficulty).color + "20",
+                      }}
+                    >
+                      <Text
+                        className="text-sm font-medium"
+                        style={{ color: getDifficultyInfo(session.difficulty).color }}
+                      >
+                        {getDifficultyInfo(session.difficulty).label}
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               ))}

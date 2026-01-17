@@ -1,0 +1,103 @@
+import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+
+export type IconName =
+  | "home"
+  | "dumbbell"
+  | "list"
+  | "search"
+  | "x"
+  | "plus"
+  | "trophy"
+  | "chest"
+  | "back"
+  | "legs"
+  | "shoulders"
+  | "arms"
+  | "core"
+  | "cardio"
+  | "other"
+  | "mood-1"
+  | "mood-2"
+  | "mood-3"
+  | "mood-4"
+  | "mood-5";
+
+interface IconProps {
+  name: IconName;
+  size?: number;
+  color?: string;
+}
+
+export function Icon({ name, size = 24, color = "#374151" }: IconProps) {
+  switch (name) {
+    // Tab icons
+    case "home":
+      return <Feather name="home" size={size} color={color} />;
+    case "dumbbell":
+      return <MaterialCommunityIcons name="dumbbell" size={size} color={color} />;
+    case "list":
+      return <Feather name="list" size={size} color={color} />;
+
+    // Action icons
+    case "search":
+      return <Feather name="search" size={size} color={color} />;
+    case "x":
+      return <Feather name="x" size={size} color={color} />;
+    case "plus":
+      return <Feather name="plus" size={size} color={color} />;
+    case "trophy":
+      return <Feather name="award" size={size} color={color} />;
+
+    // Body part icons
+    case "chest":
+      return <MaterialCommunityIcons name="human" size={size} color={color} />;
+    case "back":
+      return <MaterialCommunityIcons name="human-handsup" size={size} color={color} />;
+    case "legs":
+      return <MaterialCommunityIcons name="human-male" size={size} color={color} />;
+    case "shoulders":
+      return <MaterialCommunityIcons name="arm-flex-outline" size={size} color={color} />;
+    case "arms":
+      return <MaterialCommunityIcons name="arm-flex" size={size} color={color} />;
+    case "core":
+      return <Ionicons name="fitness-outline" size={size} color={color} />;
+    case "cardio":
+      return <MaterialCommunityIcons name="run" size={size} color={color} />;
+    case "other":
+      return <MaterialCommunityIcons name="weight-lifter" size={size} color={color} />;
+
+    // Mood/Difficulty icons (1-5 scale using circles)
+    case "mood-1":
+      return <Ionicons name="happy-outline" size={size} color={color} />;
+    case "mood-2":
+      return <Ionicons name="sad-outline" size={size} color={color} />;
+    case "mood-3":
+      return <Ionicons name="remove-circle-outline" size={size} color={color} />;
+    case "mood-4":
+      return <Ionicons name="happy-outline" size={size} color={color} />;
+    case "mood-5":
+      return <Ionicons name="flame-outline" size={size} color={color} />;
+
+    default:
+      return <Feather name="circle" size={size} color={color} />;
+  }
+}
+
+// Body part icon mapping for category display
+export const BODY_PART_ICONS: Record<string, IconName> = {
+  chest: "chest",
+  back: "back",
+  legs: "legs",
+  shoulders: "shoulders",
+  arms: "arms",
+  core: "core",
+  cardio: "cardio",
+  other: "other",
+};
+
+// Tab icon mapping
+export const TAB_ICONS: Record<string, IconName> = {
+  index: "home",
+  exercises: "dumbbell",
+  history: "list",
+};

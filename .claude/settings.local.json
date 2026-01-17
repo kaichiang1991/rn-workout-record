@@ -6,7 +6,21 @@
       "Bash(npx tsc:*)",
       "Bash(npm run format:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(npm run format:check:*)"
+      "Bash(npm run format:check:*)",
+      "Skill(superpowers:brainstorming)",
+      "Bash(npm test)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 新增 getRecentByExerciseId 方法查詢特定項目歷史紀錄\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 新增 RecentRecordsList 元件顯示歷史紀錄\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(npm run start:*)",
+      "Bash(npx prettier:*)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Bash(git merge:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ]
   }
 }

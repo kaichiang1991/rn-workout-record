@@ -2,17 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { useExercises } from "@/hooks/useExercises";
-
-const categoryIcons: Record<string, string> = {
-  chest: "🫁",
-  back: "🔙",
-  legs: "🦵",
-  shoulders: "💪",
-  arms: "💪",
-  core: "🎯",
-  cardio: "🏃",
-  other: "🏋️",
-};
+import { Icon, BODY_PART_ICONS, type IconName } from "@/components/Icon";
 
 export default function ExercisesScreen() {
   const router = useRouter();
@@ -80,7 +70,13 @@ export default function ExercisesScreen() {
           Object.entries(groupedExercises).map(([category, items]) => (
             <View key={category} className="mb-6">
               <View className="flex-row items-center mb-3">
-                <Text className="text-xl mr-2">{categoryIcons[category] || "🏋️"}</Text>
+                <View className="mr-2">
+                  <Icon
+                    name={(BODY_PART_ICONS[category] || "other") as IconName}
+                    size={20}
+                    color="#374151"
+                  />
+                </View>
                 <Text className="text-lg font-bold text-gray-700">
                   {categoryNames[category] || category}
                 </Text>
