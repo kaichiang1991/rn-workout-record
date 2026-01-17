@@ -10,7 +10,7 @@ interface CreateExerciseInput {
 
 interface UpdateExerciseInput {
   name?: string;
-  category?: string;
+  bodyParts?: string[]; // 改成陣列
   description?: string | null;
   isActive?: boolean;
 }
@@ -102,9 +102,9 @@ export function useExercises() {
         updates.push("name = ?");
         values.push(input.name);
       }
-      if (input.category !== undefined) {
+      if (input.bodyParts !== undefined && input.bodyParts.length > 0) {
         updates.push("category = ?");
-        values.push(input.category);
+        values.push(input.bodyParts[0]); // 主要分類
       }
       if (input.description !== undefined) {
         updates.push("description = ?");
@@ -118,19 +118,45 @@ export function useExercises() {
       if (updates.length > 0) {
         values.push(id);
         await db.runAsync(`UPDATE exercises SET ${updates.join(", ")} WHERE id = ?`, values);
-
-        setExercises((prev) =>
-          prev.map((e) =>
-            e.id === id
-              ? {
-                  ...e,
-                  ...input,
-                  isActive: input.isActive !== undefined ? input.isActive : e.isActive,
-                }
-              : e
-          )
-        );
       }
+
+      // 更新部位關聯
+      if (input.bodyParts !== undefined) {
+        // 刪除舊的關聯
+        await db.runAsync("DELETE FROM exercise_body_parts WHERE exerciseId = ?", [id]);
+        // 插入新的關聯
+        for (const bodyPart of input.bodyParts) {
+          await db.runAsync(
+            "INSERT INTO exercise_body_parts (exerciseId, bodyPart) VALUES (?, ?)",
+            [id, bodyPart]
+          );
+        }
+
+        // 更新本地狀態
+        setExerciseBodyParts((prev) => {
+          const filtered = prev.filter((bp) => bp.exerciseId !== id);
+          const newParts = input.bodyParts!.map((bp, idx) => ({
+            id: -Date.now() - idx,
+            exerciseId: id,
+            bodyPart: bp,
+          }));
+          return [...filtered, ...newParts];
+        });
+      }
+
+      setExercises((prev) =>
+        prev.map((e) =>
+          e.id === id
+            ? {
+                ...e,
+                name: input.name ?? e.name,
+                category: input.bodyParts?.[0] ?? e.category,
+                description: input.description !== undefined ? input.description : e.description,
+                isActive: input.isActive !== undefined ? input.isActive : e.isActive,
+              }
+            : e
+        )
+      );
     },
     []
   );
