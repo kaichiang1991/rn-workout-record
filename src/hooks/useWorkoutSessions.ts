@@ -64,6 +64,18 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
     return session || null;
   }, []);
 
+  const getRecentByExerciseId = useCallback(
+    async (exerciseId: number, limit: number = 3): Promise<WorkoutSession[]> => {
+      const db = await getDatabase();
+      const results = await db.getAllAsync<WorkoutSession>(
+        "SELECT * FROM workout_sessions WHERE exerciseId = ? ORDER BY date DESC, createdAt DESC LIMIT ?",
+        [exerciseId, limit]
+      );
+      return results;
+    },
+    []
+  );
+
   const createSession = useCallback(async (input: CreateSessionInput): Promise<WorkoutSession> => {
     const db = await getDatabase();
 
@@ -114,6 +126,7 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
     error,
     refresh: fetchSessions,
     getSessionById,
+    getRecentByExerciseId,
     createSession,
     deleteSession,
   };
