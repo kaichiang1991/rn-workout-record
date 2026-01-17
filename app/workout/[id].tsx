@@ -3,14 +3,15 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
-import { WorkoutSessionWithSets, WorkoutSet } from "@/db/client";
+import { WorkoutSession } from "@/db/client";
+import { DIFFICULTY_LEVELS } from "@/utils/constants";
 
 export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getSessionById, deleteSession } = useWorkoutSessions();
   const { exercises } = useExercises();
-  const [session, setSession] = useState<WorkoutSessionWithSets | null>(null);
+  const [session, setSession] = useState<WorkoutSession | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,14 +54,10 @@ export default function WorkoutDetailScreen() {
     return exercise?.name || "未知項目";
   };
 
-  const getMoodEmoji = (mood: number | null) => {
-    const moods = ["😢", "😕", "😐", "🙂", "😄"];
-    return mood ? moods[mood - 1] : "❓";
-  };
-
-  const getMoodLabel = (mood: number | null) => {
-    const labels = ["很差", "不好", "普通", "不錯", "很棒"];
-    return mood ? labels[mood - 1] : "未記錄";
+  const getDifficultyInfo = (difficulty: number | null) => {
+    if (!difficulty) return { label: "未記錄", color: "#9ca3af" };
+    const level = DIFFICULTY_LEVELS.find((l) => l.value === difficulty);
+    return level || { label: "未知", color: "#9ca3af" };
   };
 
   const formatDate = (dateStr: string) => {
@@ -94,8 +91,11 @@ export default function WorkoutDetailScreen() {
     );
   }
 
-  const totalReps = session.sets?.reduce((sum: number, s: WorkoutSet) => sum + (s.reps || 0), 0);
-  const maxWeight = Math.max(...(session.sets?.map((s: WorkoutSet) => s.weight || 0) || [0]));
+  const difficultyInfo = getDifficultyInfo(session.difficulty);
+  const totalVolume =
+    session.setCount && session.reps && session.weight
+      ? session.setCount * session.reps * session.weight
+      : null;
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -110,56 +110,42 @@ export default function WorkoutDetailScreen() {
               <Text className="text-gray-500 mt-1">{formatDate(session.date)}</Text>
             </View>
             <View className="items-center">
-              <Text className="text-4xl">{getMoodEmoji(session.mood)}</Text>
-              <Text className="text-sm text-gray-500 mt-1">{getMoodLabel(session.mood)}</Text>
+              <View
+                className="w-10 h-10 rounded-full items-center justify-center"
+                style={{ backgroundColor: difficultyInfo.color }}
+              />
+              <Text className="text-sm text-gray-500 mt-1">{difficultyInfo.label}</Text>
             </View>
           </View>
         </View>
 
-        {/* 統計摘要 */}
+        {/* 訓練數據 */}
         <View className="flex-row gap-3 mb-4">
           <View className="flex-1 bg-white rounded-xl p-4">
-            <Text className="text-gray-500 text-sm">總組數</Text>
-            <Text className="text-2xl font-bold text-gray-800">{session.sets?.length || 0}</Text>
-          </View>
-          <View className="flex-1 bg-white rounded-xl p-4">
-            <Text className="text-gray-500 text-sm">總次數</Text>
-            <Text className="text-2xl font-bold text-gray-800">{totalReps}</Text>
-          </View>
-          <View className="flex-1 bg-white rounded-xl p-4">
-            <Text className="text-gray-500 text-sm">最大重量</Text>
+            <Text className="text-gray-500 text-sm">重量</Text>
             <Text className="text-2xl font-bold text-gray-800">
-              {maxWeight > 0 ? `${maxWeight}kg` : "-"}
+              {session.isBodyweight ? "自體" : session.weight ? `${session.weight}kg` : "-"}
+            </Text>
+          </View>
+          <View className="flex-1 bg-white rounded-xl p-4">
+            <Text className="text-gray-500 text-sm">次數</Text>
+            <Text className="text-2xl font-bold text-gray-800">
+              {session.reps ? `${session.reps}下` : "-"}
+            </Text>
+          </View>
+          <View className="flex-1 bg-white rounded-xl p-4">
+            <Text className="text-gray-500 text-sm">組數</Text>
+            <Text className="text-2xl font-bold text-gray-800">
+              {session.setCount ? `${session.setCount}組` : "-"}
             </Text>
           </View>
         </View>
 
-        {/* 詳細組數 */}
-        {session.sets && session.sets.length > 0 && (
-          <View className="mb-4">
-            <Text className="text-lg font-bold text-gray-700 mb-3">運動組數</Text>
-            {session.sets.map((set: WorkoutSet, index: number) => (
-              <View key={index} className="bg-white rounded-xl p-4 mb-2">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-lg font-medium text-gray-700">第 {set.setNumber} 組</Text>
-                  <View className="flex-row gap-4">
-                    {set.reps !== null && (
-                      <View className="items-center">
-                        <Text className="text-xl font-bold text-primary-600">{set.reps}</Text>
-                        <Text className="text-xs text-gray-500">次</Text>
-                      </View>
-                    )}
-                    {set.weight !== null && (
-                      <View className="items-center">
-                        <Text className="text-xl font-bold text-primary-600">{set.weight}</Text>
-                        <Text className="text-xs text-gray-500">kg</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-                {set.notes && <Text className="text-gray-500 text-sm mt-2">{set.notes}</Text>}
-              </View>
-            ))}
+        {/* 總訓練量 */}
+        {totalVolume && (
+          <View className="bg-primary-500 rounded-xl p-4 mb-4">
+            <Text className="text-white/80 text-sm">總訓練量</Text>
+            <Text className="text-white text-3xl font-bold">{totalVolume} kg</Text>
           </View>
         )}
 
