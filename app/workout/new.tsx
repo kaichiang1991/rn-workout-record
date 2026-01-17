@@ -1,19 +1,22 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Switch } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { BodyPartSelector } from "@/components/BodyPartSelector";
 import { DifficultySelector } from "@/components/DifficultySelector";
 import { SetCounter } from "@/components/SetCounter";
+import { RecentRecordsList } from "@/components/RecentRecordsList";
 import { BodyPartKey } from "@/utils/constants";
+import { WorkoutSession } from "@/db/client";
 
 export default function NewWorkoutScreen() {
   const router = useRouter();
   const { filteredExercises, selectedBodyPart, setSelectedBodyPart } = useExercises();
-  const { createSession } = useWorkoutSessions();
+  const { createSession, getRecentByExerciseId } = useWorkoutSessions();
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
+  const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
   const [isBodyweight, setIsBodyweight] = useState(false);
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
@@ -25,6 +28,35 @@ export default function NewWorkoutScreen() {
   const handleBodyPartChange = (bodyPart: BodyPartKey | null) => {
     setSelectedBodyPart(bodyPart);
     setSelectedExerciseId(null);
+  };
+
+  useEffect(() => {
+    const loadRecentRecords = async () => {
+      if (selectedExerciseId) {
+        const records = await getRecentByExerciseId(selectedExerciseId);
+        setRecentRecords(records);
+      } else {
+        setRecentRecords([]);
+      }
+    };
+    loadRecentRecords();
+  }, [selectedExerciseId, getRecentByExerciseId]);
+
+  const handleSelectRecentRecord = (record: WorkoutSession) => {
+    // 帶入重量設定
+    if (record.isBodyweight) {
+      setIsBodyweight(true);
+      setWeight("");
+    } else {
+      setIsBodyweight(false);
+      setWeight(record.weight?.toString() || "");
+    }
+
+    // 帶入次數
+    setReps(record.reps?.toString() || "");
+
+    // 組數歸零
+    setSetCount(0);
   };
 
   const handleSave = async () => {
@@ -108,6 +140,9 @@ export default function NewWorkoutScreen() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+          )}
+          {selectedExerciseId && recentRecords.length > 0 && (
+            <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
           )}
         </View>
 
