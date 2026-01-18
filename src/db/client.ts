@@ -61,6 +61,28 @@ export async function initDatabase(): Promise<void> {
     );
   `);
 
+  // 建立 TrainingMenu 表
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS training_menus (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // 建立 TrainingMenuItem 表
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS training_menu_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menuId INTEGER NOT NULL,
+      exerciseId INTEGER NOT NULL,
+      sortOrder INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (menuId) REFERENCES training_menus(id) ON DELETE CASCADE,
+      FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
+    );
+  `);
+
   // 遷移：新增 workout_sessions 欄位
   const columns = await database.getAllAsync<{ name: string }>(
     "PRAGMA table_info(workout_sessions)"
@@ -174,4 +196,18 @@ export interface WorkoutSet {
 
 export interface WorkoutSessionWithSets extends WorkoutSession {
   sets: WorkoutSet[];
+}
+
+export interface TrainingMenu {
+  id: number;
+  name: string;
+  description: string | null;
+  createdAt: string;
+}
+
+export interface TrainingMenuItem {
+  id: number;
+  menuId: number;
+  exerciseId: number;
+  sortOrder: number;
 }
