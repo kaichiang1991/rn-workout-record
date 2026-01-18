@@ -57,6 +57,13 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => <TabIcon name="history" focused={focused} />,
         }}
       />
+      <Tabs.Screen
+        name="menus"
+        options={{
+          title: "訓練菜單",
+          tabBarIcon: ({ focused }) => <TabIcon name="menus" focused={focused} />,
+        }}
+      />
     </Tabs>
   );
 }

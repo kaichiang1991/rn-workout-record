@@ -4,6 +4,7 @@ export type IconName =
   | "home"
   | "dumbbell"
   | "list"
+  | "menu"
   | "search"
   | "x"
   | "plus"
@@ -37,6 +38,8 @@ export function Icon({ name, size = 24, color = "#374151" }: IconProps) {
       return <MaterialCommunityIcons name="dumbbell" size={size} color={color} />;
     case "list":
       return <Feather name="list" size={size} color={color} />;
+    case "menu":
+      return <MaterialCommunityIcons name="clipboard-list-outline" size={size} color={color} />;
 
     // Action icons
     case "search":
@@ -100,4 +103,5 @@ export const TAB_ICONS: Record<string, IconName> = {
   index: "home",
   exercises: "dumbbell",
   history: "list",
+  menus: "menu",
 };
