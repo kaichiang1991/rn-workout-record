@@ -22,18 +22,28 @@ const CONTENT_HEIGHT = SCREEN_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT - 120;
 
 interface DraggableItemProps {
   exercise: Exercise;
+  onDragStart: () => void;
   onDragEnd: (exercise: Exercise, y: number) => void;
-  dropZoneY: number;
 }
 
-function DraggableExerciseItem({ exercise, onDragEnd, dropZoneY: _dropZoneY }: DraggableItemProps) {
+function DraggableExerciseItem({ exercise, onDragStart, onDragEnd }: DraggableItemProps) {
   const pan = useRef(new Animated.ValueXY()).current;
   const scale = useRef(new Animated.Value(1)).current;
+  const onDragStartRef = useRef(onDragStart);
+  const onDragEndRef = useRef(onDragEnd);
+
+  useEffect(() => {
+    onDragStartRef.current = onDragStart;
+    onDragEndRef.current = onDragEnd;
+  }, [onDragStart, onDragEnd]);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
+        onDragStartRef.current();
         Animated.spring(scale, {
           toValue: 1.1,
           useNativeDriver: true,
@@ -49,7 +59,7 @@ function DraggableExerciseItem({ exercise, onDragEnd, dropZoneY: _dropZoneY }: D
         }).start();
 
         // 檢查是否拖到下方區域
-        onDragEnd(exercise, gestureState.moveY);
+        onDragEndRef.current(exercise, gestureState.moveY);
 
         Animated.spring(pan, {
           toValue: { x: 0, y: 0 },
@@ -75,18 +85,28 @@ function DraggableExerciseItem({ exercise, onDragEnd, dropZoneY: _dropZoneY }: D
 
 interface DraggableMenuItemProps {
   item: MenuItemWithExercise;
+  onDragStart: () => void;
   onDragEnd: (item: MenuItemWithExercise, y: number) => void;
-  removeZoneY: number;
 }
 
-function DraggableMenuItem({ item, onDragEnd, removeZoneY: _removeZoneY }: DraggableMenuItemProps) {
+function DraggableMenuItem({ item, onDragStart, onDragEnd }: DraggableMenuItemProps) {
   const pan = useRef(new Animated.ValueXY()).current;
   const scale = useRef(new Animated.Value(1)).current;
+  const onDragStartRef = useRef(onDragStart);
+  const onDragEndRef = useRef(onDragEnd);
+
+  useEffect(() => {
+    onDragStartRef.current = onDragStart;
+    onDragEndRef.current = onDragEnd;
+  }, [onDragStart, onDragEnd]);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
+        onDragStartRef.current();
         Animated.spring(scale, {
           toValue: 1.1,
           useNativeDriver: true,
@@ -102,7 +122,7 @@ function DraggableMenuItem({ item, onDragEnd, removeZoneY: _removeZoneY }: Dragg
         }).start();
 
         // 檢查是否拖到上方區域
-        onDragEnd(item, gestureState.moveY);
+        onDragEndRef.current(item, gestureState.moveY);
 
         Animated.spring(pan, {
           toValue: { x: 0, y: 0 },
@@ -137,6 +157,8 @@ export default function MenuDetailScreen() {
   const [menuItems, setMenuItems] = useState<MenuItemWithExercise[]>([]);
   const [selectedBodyPart, setSelectedBodyPart] = useState<BodyPartKey | null>(null);
   const [loading, setLoading] = useState(true);
+  const [topScrollEnabled, setTopScrollEnabled] = useState(true);
+  const [bottomScrollEnabled, setBottomScrollEnabled] = useState(true);
 
   // 取得分隔線 Y 座標（用於判斷拖曳目標）
   const dropZoneY = HEADER_HEIGHT + CONTENT_HEIGHT / 2;
@@ -164,6 +186,7 @@ export default function MenuDetailScreen() {
   );
 
   const handleAddExercise = async (exercise: Exercise, y: number) => {
+    setTopScrollEnabled(true);
     // 如果拖到下半部（菜單區域），則加入
     if (y > dropZoneY) {
       try {
@@ -176,6 +199,7 @@ export default function MenuDetailScreen() {
   };
 
   const handleRemoveItem = async (item: MenuItemWithExercise, y: number) => {
+    setBottomScrollEnabled(true);
     // 如果拖到上半部（項目區域），則移除
     if (y < dropZoneY) {
       try {
@@ -260,14 +284,18 @@ export default function MenuDetailScreen() {
           <Text className="text-sm font-medium text-gray-600">可選項目</Text>
           <Text className="text-xs text-gray-400">向下拖曳加入菜單</Text>
         </View>
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={topScrollEnabled}
+        >
           <View className="flex-row flex-wrap">
             {availableExercises.map((exercise) => (
               <DraggableExerciseItem
                 key={exercise.id}
                 exercise={exercise}
+                onDragStart={() => setTopScrollEnabled(false)}
                 onDragEnd={handleAddExercise}
-                dropZoneY={dropZoneY}
               />
             ))}
             {availableExercises.length === 0 && (
@@ -291,14 +319,18 @@ export default function MenuDetailScreen() {
         {loading ? (
           <Text className="text-gray-400 text-sm">載入中...</Text>
         ) : (
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <ScrollView
+            className="flex-1"
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={bottomScrollEnabled}
+          >
             <View className="flex-row flex-wrap">
               {menuItems.map((item) => (
                 <DraggableMenuItem
                   key={item.id}
                   item={item}
+                  onDragStart={() => setBottomScrollEnabled(false)}
                   onDragEnd={handleRemoveItem}
-                  removeZoneY={dropZoneY}
                 />
               ))}
               {menuItems.length === 0 && (
@@ -309,10 +341,19 @@ export default function MenuDetailScreen() {
         )}
       </View>
 
-      {/* Footer: 刪除按鈕 */}
-      <View className="bg-white border-t border-gray-200 p-4">
-        <TouchableOpacity className="bg-red-500 rounded-xl p-4 items-center" onPress={handleDelete}>
-          <Text className="text-white text-lg font-semibold">刪除菜單</Text>
+      {/* Footer: 完成和刪除按鈕 */}
+      <View className="bg-white border-t border-gray-200 p-4 flex-row gap-3">
+        <TouchableOpacity
+          className="flex-1 bg-gray-200 rounded-xl p-4 items-center"
+          onPress={handleDelete}
+        >
+          <Text className="text-gray-700 text-lg font-semibold">刪除菜單</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-1 bg-primary-500 rounded-xl p-4 items-center"
+          onPress={() => router.back()}
+        >
+          <Text className="text-white text-lg font-semibold">完成</Text>
         </TouchableOpacity>
       </View>
     </View>
