@@ -1,12 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Switch } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { BodyPartSelector } from "@/components/BodyPartSelector";
-import { DifficultySelector } from "@/components/DifficultySelector";
-import { SetCounter } from "@/components/SetCounter";
 import { RecentRecordsList } from "@/components/RecentRecordsList";
+import { WorkoutRecordForm } from "@/components/WorkoutRecordForm";
 import { BodyPartKey } from "@/utils/constants";
 import { WorkoutSession } from "@/db/client";
 
@@ -43,7 +42,6 @@ export default function NewWorkoutScreen() {
   }, [selectedExerciseId, getRecentByExerciseId]);
 
   const handleSelectRecentRecord = (record: WorkoutSession) => {
-    // 帶入重量設定
     if (record.isBodyweight) {
       setIsBodyweight(true);
       setWeight("");
@@ -51,11 +49,7 @@ export default function NewWorkoutScreen() {
       setIsBodyweight(false);
       setWeight(record.weight?.toString() || "");
     }
-
-    // 帶入次數
     setReps(record.reps?.toString() || "");
-
-    // 組數歸零
     setSetCount(0);
   };
 
@@ -146,72 +140,21 @@ export default function NewWorkoutScreen() {
           )}
         </View>
 
-        {/* 重量設定 */}
-        <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">重量</Text>
-          <View className="bg-white rounded-xl p-4">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-gray-700">自體重量</Text>
-              <Switch value={isBodyweight} onValueChange={setIsBodyweight} />
-            </View>
-            {!isBodyweight && (
-              <View className="flex-row items-center">
-                <TextInput
-                  className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-lg"
-                  placeholder="0"
-                  keyboardType="decimal-pad"
-                  value={weight}
-                  onChangeText={setWeight}
-                />
-                <Text className="text-gray-600 text-lg ml-3">kg</Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* 次數設定 */}
-        <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">每組次數</Text>
-          <View className="bg-white rounded-xl p-4">
-            <View className="flex-row items-center">
-              <TextInput
-                className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-lg"
-                placeholder="0"
-                keyboardType="number-pad"
-                value={reps}
-                onChangeText={setReps}
-              />
-              <Text className="text-gray-600 text-lg ml-3">下</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 組數計數器 */}
-        <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">完成組數</Text>
-          <View className="bg-white rounded-xl p-6 items-center">
-            <SetCounter value={setCount} onChange={setSetCount} />
-          </View>
-        </View>
-
-        {/* 難易度選擇 */}
-        <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">今天難易度</Text>
-          <DifficultySelector value={difficulty} onChange={setDifficulty} />
-        </View>
-
-        {/* 備註 */}
-        <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">備註</Text>
-          <TextInput
-            className="bg-white rounded-xl p-4 text-base min-h-24"
-            placeholder="記錄今天的訓練心得..."
-            multiline
-            textAlignVertical="top"
-            value={notes}
-            onChangeText={setNotes}
-          />
-        </View>
+        {/* 記錄表單 */}
+        <WorkoutRecordForm
+          isBodyweight={isBodyweight}
+          onIsBodyweightChange={setIsBodyweight}
+          weight={weight}
+          onWeightChange={setWeight}
+          reps={reps}
+          onRepsChange={setReps}
+          setCount={setCount}
+          onSetCountChange={setSetCount}
+          difficulty={difficulty}
+          onDifficultyChange={setDifficulty}
+          notes={notes}
+          onNotesChange={setNotes}
+        />
 
         {/* 儲存按鈕 */}
         <TouchableOpacity
