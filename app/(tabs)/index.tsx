@@ -45,13 +45,25 @@ export default function HomeScreen() {
     );
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDateHeader = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-TW", {
-      month: "short",
+      month: "long",
       day: "numeric",
-      weekday: "short",
     });
+  };
+
+  const groupSessionsByDate = () => {
+    const grouped: Record<string, typeof sessions> = {};
+    sessions.forEach((session) => {
+      // 標準化日期格式，只取 YYYY-MM-DD 部分
+      const dateKey = session.date.split("T")[0];
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(session);
+    });
+    return Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a));
   };
 
   return (
@@ -119,27 +131,36 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : (
-            sessions.map((session) => (
-              <TouchableOpacity
-                key={session.id}
-                className="bg-white rounded-xl p-4 mb-3 shadow-sm"
-                onPress={() => router.push(`/workout/${session.id}`)}
-              >
-                <View className="flex-row justify-between items-start">
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold text-gray-800">
-                      {getExerciseName(session.exerciseId)}
-                    </Text>
-                    <Text className="text-gray-500 text-sm mt-1">{formatDate(session.date)}</Text>
-                    {session.notes && (
-                      <Text className="text-gray-400 text-sm mt-1" numberOfLines={1}>
-                        {session.notes}
-                      </Text>
-                    )}
-                  </View>
-                  {renderDifficultyDot(session.difficulty, 24)}
+            groupSessionsByDate().map(([date, dateSessions]) => (
+              <View key={date} className="mb-4">
+                <Text className="text-gray-600 font-medium mb-2">{formatDateHeader(date)}</Text>
+                <View className="bg-white rounded-xl overflow-hidden shadow-sm">
+                  {dateSessions.map((session, index) => (
+                    <TouchableOpacity
+                      key={session.id}
+                      className={`p-4 flex-row justify-between items-center ${
+                        index < dateSessions.length - 1 ? "border-b border-gray-100" : ""
+                      }`}
+                      onPress={() => router.push(`/workout/${session.id}`)}
+                    >
+                      <View className="flex-row items-center flex-1">
+                        {renderDifficultyDot(session.difficulty, 20)}
+                        <View className="ml-3 flex-1">
+                          <Text className="text-base font-medium text-gray-800">
+                            {getExerciseName(session.exerciseId)}
+                          </Text>
+                          {session.notes && (
+                            <Text className="text-gray-400 text-sm mt-0.5" numberOfLines={1}>
+                              {session.notes}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                      <Icon name="chevron-right" size={20} color="#9ca3af" />
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              </TouchableOpacity>
+              </View>
             ))
           )}
         </View>

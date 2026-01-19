@@ -9,6 +9,7 @@ export type IconName =
   | "x"
   | "plus"
   | "trophy"
+  | "chevron-right"
   | "chest"
   | "back"
   | "legs"
@@ -50,6 +51,8 @@ export function Icon({ name, size = 24, color = "#374151" }: IconProps) {
       return <Feather name="plus" size={size} color={color} />;
     case "trophy":
       return <Feather name="award" size={size} color={color} />;
+    case "chevron-right":
+      return <Feather name="chevron-right" size={size} color={color} />;
 
     // Body part icons
     case "chest":
