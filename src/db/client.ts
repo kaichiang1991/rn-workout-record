@@ -17,7 +17,6 @@ export async function initDatabase(): Promise<void> {
     CREATE TABLE IF NOT EXISTS exercises (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      category TEXT,
       description TEXT,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       isActive INTEGER DEFAULT 1
@@ -179,6 +178,51 @@ export async function initDatabase(): Promise<void> {
   if (result && result.count === 0) {
     await seedDatabase(database);
   }
+
+  // 清理可能殘留的暫存表格
+  await database.execAsync("DROP TABLE IF EXISTS exercises_new;");
+
+  // 遷移：檢查 exercises 表是否還有 category 欄位
+  const exerciseColumns = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(exercises)"
+  );
+  const exerciseColumnNames = exerciseColumns.map((c) => c.name);
+
+  if (exerciseColumnNames.includes("category")) {
+    // 先確保每個 exercise 都有對應的 body_part 關聯
+    // 如果 exercise 存在但沒有 body_part 關聯，則根據 category 建立關聯
+    const exercisesWithoutBodyParts = await database.getAllAsync<{ id: number; category: string }>(
+      `SELECT e.id, e.category
+       FROM exercises e
+       LEFT JOIN exercise_body_parts bp ON e.id = bp.exerciseId
+       WHERE bp.id IS NULL AND e.category IS NOT NULL`
+    );
+
+    for (const exercise of exercisesWithoutBodyParts) {
+      await database.runAsync(
+        "INSERT INTO exercise_body_parts (exerciseId, bodyPart) VALUES (?, ?)",
+        [exercise.id, exercise.category]
+      );
+    }
+
+    // 移除 category 欄位
+    await database.execAsync(`
+      CREATE TABLE exercises_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        isActive INTEGER DEFAULT 1
+      );
+    `);
+    await database.execAsync(`
+      INSERT INTO exercises_new (id, name, description, createdAt, isActive)
+      SELECT id, name, description, createdAt, isActive
+      FROM exercises;
+    `);
+    await database.execAsync("DROP TABLE exercises;");
+    await database.execAsync("ALTER TABLE exercises_new RENAME TO exercises;");
+  }
 }
 
 async function seedDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
@@ -199,8 +243,8 @@ async function seedDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
 
   for (const exercise of defaultExercises) {
     const result = await database.runAsync(
-      "INSERT INTO exercises (name, category, description, isActive) VALUES (?, ?, ?, 1)",
-      [exercise.name, exercise.bodyParts[0], exercise.description]
+      "INSERT INTO exercises (name, description, isActive) VALUES (?, ?, 1)",
+      [exercise.name, exercise.description]
     );
 
     // 插入部位關聯
@@ -217,7 +261,6 @@ async function seedDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
 export interface Exercise {
   id: number;
   name: string;
-  category: string | null;
   description: string | null;
   createdAt: string;
   isActive: boolean;

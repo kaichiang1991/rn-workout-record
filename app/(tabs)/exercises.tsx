@@ -6,7 +6,7 @@ import { Icon, BODY_PART_ICONS, type IconName } from "@/components/Icon";
 
 export default function ExercisesScreen() {
   const router = useRouter();
-  const { exercises, loading, refresh } = useExercises();
+  const { exercises, exerciseBodyParts, loading, refresh } = useExercises();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
@@ -18,13 +18,15 @@ export default function ExercisesScreen() {
   const activeExercises = exercises.filter((e) => e.isActive);
   const inactiveExercises = exercises.filter((e) => !e.isActive);
 
+  // 使用 exerciseBodyParts 來分組，以第一個部位為主要分類
   const groupedExercises = activeExercises.reduce(
     (acc, exercise) => {
-      const category = exercise.category || "other";
-      if (!acc[category]) {
-        acc[category] = [];
+      const bodyParts = exerciseBodyParts.filter((bp) => bp.exerciseId === exercise.id);
+      const primaryBodyPart = bodyParts.length > 0 ? bodyParts[0].bodyPart : "other";
+      if (!acc[primaryBodyPart]) {
+        acc[primaryBodyPart] = [];
       }
-      acc[category].push(exercise);
+      acc[primaryBodyPart].push(exercise);
       return acc;
     },
     {} as Record<string, typeof exercises>

@@ -27,7 +27,7 @@ export function useExercises() {
       setLoading(true);
       const db = await getDatabase();
       const results = await db.getAllAsync<Exercise>(
-        "SELECT id, name, category, description, createdAt, isActive FROM exercises ORDER BY name ASC"
+        "SELECT id, name, description, createdAt, isActive FROM exercises ORDER BY name ASC"
       );
       // Convert SQLite integer to boolean
       const mappedResults = results.map((r) => ({
@@ -54,11 +54,10 @@ export function useExercises() {
 
   const createExercise = useCallback(async (input: CreateExerciseInput): Promise<Exercise> => {
     const db = await getDatabase();
-    const primaryCategory = input.bodyParts[0] || "other";
 
     const result = await db.runAsync(
-      "INSERT INTO exercises (name, category, description, isActive) VALUES (?, ?, ?, 1)",
-      [input.name, primaryCategory, input.description]
+      "INSERT INTO exercises (name, description, isActive) VALUES (?, ?, 1)",
+      [input.name, input.description]
     );
 
     // 插入所有部位關聯
@@ -72,7 +71,6 @@ export function useExercises() {
     const newExercise: Exercise = {
       id: result.lastInsertRowId,
       name: input.name,
-      category: primaryCategory,
       description: input.description,
       createdAt: new Date().toISOString(),
       isActive: true,
@@ -101,10 +99,6 @@ export function useExercises() {
       if (input.name !== undefined) {
         updates.push("name = ?");
         values.push(input.name);
-      }
-      if (input.bodyParts !== undefined && input.bodyParts.length > 0) {
-        updates.push("category = ?");
-        values.push(input.bodyParts[0]); // 主要分類
       }
       if (input.description !== undefined) {
         updates.push("description = ?");
@@ -150,7 +144,6 @@ export function useExercises() {
             ? {
                 ...e,
                 name: input.name ?? e.name,
-                category: input.bodyParts?.[0] ?? e.category,
                 description: input.description !== undefined ? input.description : e.description,
                 isActive: input.isActive !== undefined ? input.isActive : e.isActive,
               }

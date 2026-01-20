@@ -13,7 +13,6 @@ interface UpdateMenuInput {
 
 export interface MenuItemWithExercise extends TrainingMenuItem {
   exerciseName: string;
-  exerciseCategory: string | null;
 }
 
 export function useTrainingMenus() {
@@ -102,7 +101,7 @@ export function useTrainingMenus() {
     const results = await db.getAllAsync<MenuItemWithExercise>(
       `SELECT
         tmi.id, tmi.menuId, tmi.exerciseId, tmi.sortOrder,
-        e.name as exerciseName, e.category as exerciseCategory
+        e.name as exerciseName
        FROM training_menu_items tmi
        JOIN exercises e ON tmi.exerciseId = e.id
        WHERE tmi.menuId = ?

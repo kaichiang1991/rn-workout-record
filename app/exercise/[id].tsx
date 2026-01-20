@@ -33,7 +33,7 @@ export default function EditExerciseScreen() {
     if (exercise) {
       setName(exercise.name);
       const bodyParts = getBodyPartsForExercise(exercise.id);
-      setSelectedBodyParts(bodyParts.length > 0 ? bodyParts : [exercise.category || "other"]);
+      setSelectedBodyParts(bodyParts.length > 0 ? bodyParts : ["other"]);
       setDescription(exercise.description || "");
       setIsActive(exercise.isActive);
       setLoading(false);

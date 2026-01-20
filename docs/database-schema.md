@@ -23,16 +23,15 @@
 
 ### 1. exercises（訓練動作）
 
-儲存所有可用的訓練動作。
+儲存所有可用的訓練動作。部位分類使用 `exercise_body_parts` 關聯表管理。
 
-| 欄位          | 型別    | 約束                      | 說明                      | 狀態 |
-| ------------- | ------- | ------------------------- | ------------------------- | ---- |
-| `id`          | INTEGER | PRIMARY KEY AUTOINCREMENT | 主鍵                      | ✅   |
-| `name`        | TEXT    | NOT NULL                  | 動作名稱                  | ✅   |
-| `category`    | TEXT    | -                         | 分類（如 legs, chest 等） | ✅   |
-| `description` | TEXT    | -                         | 動作說明                  | ✅   |
-| `createdAt`   | TEXT    | DEFAULT CURRENT_TIMESTAMP | 建立時間                  | ✅   |
-| `isActive`    | INTEGER | DEFAULT 1                 | 是否啟用（0/1）           | ✅   |
+| 欄位          | 型別    | 約束                      | 說明            | 狀態 |
+| ------------- | ------- | ------------------------- | --------------- | ---- |
+| `id`          | INTEGER | PRIMARY KEY AUTOINCREMENT | 主鍵            | ✅   |
+| `name`        | TEXT    | NOT NULL                  | 動作名稱        | ✅   |
+| `description` | TEXT    | -                         | 動作說明        | ✅   |
+| `createdAt`   | TEXT    | DEFAULT CURRENT_TIMESTAMP | 建立時間        | ✅   |
+| `isActive`    | INTEGER | DEFAULT 1                 | 是否啟用（0/1） | ✅   |
 
 ---
 
@@ -125,7 +124,6 @@
 │─────────────────│
 │ id (PK)         │◄─────────────────────┐
 │ name            │                      │
-│ category        │                      │
 │ description     │                      │
 │ createdAt       │                      │
 │ isActive        │                      │
