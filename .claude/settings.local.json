@@ -24,7 +24,8 @@
       "Skill(superpowers:systematic-debugging)",
       "Bash(sqlite3:*)",
       "Skill(superpowers:using-git-worktrees)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(npm run test:*)"
     ]
   }
 }

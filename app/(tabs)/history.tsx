@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
 import { Icon } from "@/components/Icon";
@@ -15,6 +16,13 @@ export default function HistoryScreen() {
   });
   const { exercises } = useExercises();
   const [refreshing, setRefreshing] = useState(false);
+
+  // 當頁面獲得焦點時自動刷新數據
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

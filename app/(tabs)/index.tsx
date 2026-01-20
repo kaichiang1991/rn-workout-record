@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
 import { useStats } from "@/hooks/useStats";
@@ -18,6 +19,14 @@ export default function HomeScreen() {
   const { exercises } = useExercises();
   const { stats, refresh: refreshStats } = useStats();
   const [refreshing, setRefreshing] = useState(false);
+
+  // 當頁面獲得焦點時自動刷新數據
+  useFocusEffect(
+    useCallback(() => {
+      refreshSessions();
+      refreshStats();
+    }, [refreshSessions, refreshStats])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
