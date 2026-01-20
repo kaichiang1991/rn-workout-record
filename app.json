@@ -14,7 +14,8 @@
       "backgroundColor": "#3b82f6"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kai.workout-record"
     },
     "android": {
       "adaptiveIcon": {

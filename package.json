@@ -4,15 +4,16 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "oxlint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "echo \"No test specified\" && exit 0",
-    "prepare": "husky"
+    "prepare": "husky",
+    "deploy:dev": "npx expo run:ios --configuration Release --device"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

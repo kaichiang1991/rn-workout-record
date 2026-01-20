@@ -27,7 +27,13 @@
       "Bash(git check-ignore:*)",
       "Bash(npm run test:*)",
       "Bash(xargs cat:*)",
-      "Skill(commit-commands:commit)"
+      "Skill(commit-commands:commit)",
+      "Bash(npx expo prebuild:*)",
+      "Bash(pod install)",
+      "Bash(xcodebuild:*)",
+      "Bash(sw_vers:*)",
+      "Bash(xcrun simctl:*)",
+      "Bash(npx expo:*)"
     ]
   },
   "outputStyle": "Explanatory"
