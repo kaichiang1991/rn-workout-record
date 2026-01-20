@@ -1,5 +1,5 @@
-import { Tabs } from "expo-router";
-import { View } from "react-native";
+import { Tabs, useRouter } from "expo-router";
+import { View, TouchableOpacity } from "react-native";
 import { Icon, TAB_ICONS } from "../../src/components/Icon";
 
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
@@ -9,6 +9,22 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   return (
     <View className="items-center justify-center">
       <Icon name={iconName} size={24} color={color} />
+    </View>
+  );
+}
+
+function AddRecordButton() {
+  const router = useRouter();
+
+  return (
+    <View className="flex-1 items-center justify-center">
+      <TouchableOpacity
+        className="w-16 h-16 rounded-full bg-primary-500 items-center justify-center shadow-lg -mt-6"
+        onPress={() => router.push("/workout/new")}
+        activeOpacity={0.8}
+      >
+        <Icon name="plus" size={32} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -48,6 +64,14 @@ export default function TabLayout() {
         options={{
           title: "健身項目",
           tabBarIcon: ({ focused }) => <TabIcon name="exercises" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="add-record"
+        options={{
+          title: "",
+          tabBarIcon: () => null,
+          tabBarButton: () => <AddRecordButton />,
         }}
       />
       <Tabs.Screen

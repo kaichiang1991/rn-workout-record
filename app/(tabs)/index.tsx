@@ -114,17 +114,6 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* 快速開始 */}
-        <TouchableOpacity
-          className="bg-white rounded-xl p-4 mb-6 flex-row items-center justify-center border-2 border-primary-500"
-          onPress={() => router.push("/workout/new")}
-        >
-          <View className="mr-2">
-            <Icon name="dumbbell" size={24} color="#3b82f6" />
-          </View>
-          <Text className="text-primary-600 text-lg font-semibold">開始新的運動紀錄</Text>
-        </TouchableOpacity>
-
         {/* 最近紀錄 */}
         <View className="mb-4">
           <Text className="text-xl font-bold text-gray-800 mb-3">最近紀錄</Text>
@@ -136,7 +125,7 @@ export default function HomeScreen() {
             <View className="bg-white rounded-xl p-6">
               <Text className="text-gray-500 text-center">還沒有運動紀錄</Text>
               <Text className="text-gray-400 text-center text-sm mt-1">
-                點擊上方按鈕開始記錄你的運動！
+                點擊下方 + 按鈕開始記錄你的運動！
               </Text>
             </View>
           ) : (

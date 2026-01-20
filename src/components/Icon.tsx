@@ -100,6 +100,7 @@ export const BODY_PART_ICONS: Record<string, IconName> = {
 export const TAB_ICONS: Record<string, IconName> = {
   index: "home",
   exercises: "dumbbell",
+  "add-record": "plus",
   history: "list",
   menus: "menu",
 };
