@@ -5,6 +5,7 @@ import { useTrainingMenus, MenuItemWithExercise } from "@/hooks/useTrainingMenus
 import { useMenuSession } from "@/hooks/useMenuSession";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { WorkoutRecordForm } from "@/components/WorkoutRecordForm";
+import { RecentRecordsList } from "@/components/RecentRecordsList";
 import { Icon } from "@/components/Icon";
 import { WorkoutSession } from "@/db/client";
 
@@ -42,6 +43,7 @@ export default function MenuWorkoutScreen() {
   const [difficulty, setDifficulty] = useState(3);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
 
   const menu = menus.find((m) => m.id === menuId);
 
@@ -94,10 +96,12 @@ export default function MenuWorkoutScreen() {
 
   const handleOpenRecord = async (item: MenuItemWithExercise) => {
     setSelectedExercise(item);
-    // 載入最近紀錄來預填
-    const recentRecords = await getRecentByExerciseId(item.exerciseId, 1);
-    if (recentRecords.length > 0) {
-      const recent = recentRecords[0];
+    // 載入最近 3 筆紀錄
+    const records = await getRecentByExerciseId(item.exerciseId, 3);
+    setRecentRecords(records);
+    // 預填最近一筆
+    if (records.length > 0) {
+      const recent = records[0];
       setIsBodyweight(Boolean(recent.isBodyweight));
       setWeight(recent.weight?.toString() || "");
       setReps(recent.reps?.toString() || "");
@@ -110,6 +114,18 @@ export default function MenuWorkoutScreen() {
     setDifficulty(3);
     setNotes("");
     setShowRecordModal(true);
+  };
+
+  const handleSelectRecentRecord = (record: WorkoutSession) => {
+    if (record.isBodyweight) {
+      setIsBodyweight(true);
+      setWeight("");
+    } else {
+      setIsBodyweight(false);
+      setWeight(record.weight?.toString() || "");
+    }
+    setReps(record.reps?.toString() || "");
+    setSetCount(0);
   };
 
   const handleSaveRecord = async () => {
@@ -372,6 +388,9 @@ export default function MenuWorkoutScreen() {
 
           {/* 表單 */}
           <ScrollView className="flex-1 p-4">
+            {/* 最近紀錄 */}
+            <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
+
             <WorkoutRecordForm
               isBodyweight={isBodyweight}
               onIsBodyweightChange={setIsBodyweight}
