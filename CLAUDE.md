@@ -21,6 +21,11 @@
 
 ## Git 工作流程
 
+### 路徑處理
+
+- 路徑包含特殊字元（如 `()` 括號）時，執行 `git add` 需用雙引號包裹路徑
+  - 例如：`git add "app/(tabs)/index.tsx"`
+
 ### Pre-commit Hook
 
 每次 commit 前會自動執行：

@@ -81,24 +81,6 @@ export default function HomeScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <View className="p-4">
-        {/* 統計卡片區 */}
-        <View className="flex-row gap-3 mb-3">
-          <View className="flex-1">
-            <View className="bg-primary-500 rounded-2xl p-4">
-              <Text className="text-white/80 text-sm">本週運動</Text>
-              <Text className="text-white text-3xl font-bold mt-1">{stats.thisWeekCount}</Text>
-              <Text className="text-white/80 text-sm">天</Text>
-            </View>
-          </View>
-          <View className="flex-1">
-            <View className="bg-green-500 rounded-2xl p-4">
-              <Text className="text-white/80 text-sm">本月運動</Text>
-              <Text className="text-white text-3xl font-bold mt-1">{stats.thisMonthCount}</Text>
-              <Text className="text-white/80 text-sm">天</Text>
-            </View>
-          </View>
-        </View>
-
         {/* 本週運動日曆 */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <View className="flex-row justify-between">
@@ -191,9 +173,27 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* 累計統計 */}
-        {stats.totalCount > 0 && (
-          <View className="mt-4">
+        {/* 統計卡片區 */}
+        <View className="mt-4">
+          <View className="flex-row gap-3 mb-3">
+            <View className="flex-1">
+              <StatsCard
+                title="本週運動"
+                value={`${stats.thisWeekCount} 天`}
+                icon="dumbbell"
+                color="primary"
+              />
+            </View>
+            <View className="flex-1">
+              <StatsCard
+                title="本月運動"
+                value={`${stats.thisMonthCount} 天`}
+                icon="dumbbell"
+                color="green"
+              />
+            </View>
+          </View>
+          {stats.totalCount > 0 && (
             <StatsCard
               title="累計運動天數"
               value={stats.totalCount}
@@ -201,8 +201,8 @@ export default function HomeScreen() {
               icon="trophy"
               color="orange"
             />
-          </View>
-        )}
+          )}
+        </View>
       </View>
     </ScrollView>
   );
