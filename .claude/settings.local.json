@@ -33,7 +33,11 @@
       "Bash(xcodebuild:*)",
       "Bash(sw_vers:*)",
       "Bash(xcrun simctl:*)",
-      "Bash(npx expo:*)"
+      "Bash(npx expo:*)",
+      "Bash(xcrun xctrace:*)",
+      "Bash(xcrun devicectl:*)",
+      "Bash(sudo xcode-select:*)",
+      "Bash(xcode-select:*)"
     ]
   },
   "outputStyle": "Explanatory"
