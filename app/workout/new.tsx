@@ -16,6 +16,7 @@ export default function NewWorkoutScreen() {
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
   const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
+  const [hasSelectedRecentRecord, setHasSelectedRecentRecord] = useState(false);
   const [isBodyweight, setIsBodyweight] = useState(false);
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
@@ -27,6 +28,7 @@ export default function NewWorkoutScreen() {
   const handleBodyPartChange = (bodyPart: BodyPartKey | null) => {
     setSelectedBodyPart(bodyPart);
     setSelectedExerciseId(null);
+    setHasSelectedRecentRecord(false);
   };
 
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function NewWorkoutScreen() {
     }
     setReps(record.reps?.toString() || "");
     setSetCount(0);
+    setHasSelectedRecentRecord(true);
   };
 
   const handleSave = async () => {
@@ -136,7 +139,10 @@ export default function NewWorkoutScreen() {
                         ? "bg-primary-500"
                         : "bg-white border border-gray-200"
                     }`}
-                    onPress={() => setSelectedExerciseId(exercise.id)}
+                    onPress={() => {
+                      setSelectedExerciseId(exercise.id);
+                      setHasSelectedRecentRecord(false);
+                    }}
                   >
                     <Text
                       className={
@@ -151,7 +157,7 @@ export default function NewWorkoutScreen() {
                 ))}
               </ScrollView>
             )}
-            {selectedExerciseId && recentRecords.length > 0 && (
+            {selectedExerciseId && recentRecords.length > 0 && !hasSelectedRecentRecord && (
               <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
             )}
           </View>

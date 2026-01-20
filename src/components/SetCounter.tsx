@@ -42,16 +42,16 @@ export function SetCounter({ value, onChange }: SetCounterProps) {
   return (
     <View className="items-center">
       <TouchableOpacity
-        className="w-32 h-32 rounded-full bg-primary-500 items-center justify-center shadow-lg"
+        className="w-24 h-24 rounded-full bg-primary-500 items-center justify-center shadow-lg"
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         activeOpacity={0.8}
       >
-        <Text className="text-white text-5xl font-bold">{value}</Text>
+        <Text className="text-white text-4xl font-bold">{value}</Text>
       </TouchableOpacity>
-      <Text className="text-gray-600 text-lg mt-2">組</Text>
-      <Text className="text-gray-400 text-sm mt-1">點擊 +1 ｜ 長按 -1</Text>
+      <Text className="text-gray-600 text-base mt-1">組</Text>
+      <Text className="text-gray-400 text-xs mt-0.5">點擊 +1 ｜ 長按 -1</Text>
     </View>
   );
 }

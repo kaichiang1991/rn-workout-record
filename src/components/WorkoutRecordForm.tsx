@@ -33,71 +33,71 @@ export function WorkoutRecordForm({
 }: WorkoutRecordFormProps) {
   return (
     <View>
-      {/* 重量設定 */}
-      <View className="mb-6">
-        <Text className="text-lg font-bold text-gray-700 mb-3">重量</Text>
-        <View className="bg-white rounded-xl p-4">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-700">自體重量</Text>
-            <Switch value={isBodyweight} onValueChange={onIsBodyweightChange} />
-          </View>
-          {!isBodyweight && (
-            <View className="flex-row items-center">
-              <TextInput
-                className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-lg"
-                placeholder="0"
-                keyboardType="decimal-pad"
-                value={weight}
-                onChangeText={onWeightChange}
-              />
-              <Text className="text-gray-600 text-lg ml-3">kg</Text>
-            </View>
-          )}
-        </View>
+      {/* 自體重量開關 */}
+      <View className="bg-white rounded-xl px-4 py-3 mb-3 flex-row items-center justify-between">
+        <Text className="text-gray-700">自體重量</Text>
+        <Switch value={isBodyweight} onValueChange={onIsBodyweightChange} />
       </View>
 
-      {/* 次數設定 */}
-      <View className="mb-6">
-        <Text className="text-lg font-bold text-gray-700 mb-3">每組次數</Text>
-        <View className="bg-white rounded-xl p-4">
-          <View className="flex-row items-center">
+      {/* 重量與次數 - 同一列 */}
+      <View className="flex-row mb-4">
+        {/* 重量 */}
+        <View className="flex-1 mr-2">
+          <Text className="text-base font-bold text-gray-700 mb-2">重量</Text>
+          <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
             <TextInput
-              className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-lg"
+              className="flex-1 text-lg"
+              placeholder="0"
+              keyboardType="decimal-pad"
+              value={isBodyweight ? "" : weight}
+              onChangeText={onWeightChange}
+              editable={!isBodyweight}
+            />
+            <Text className="text-gray-600 text-base ml-2">kg</Text>
+          </View>
+        </View>
+
+        {/* 次數 */}
+        <View className="flex-1 ml-2">
+          <Text className="text-base font-bold text-gray-700 mb-2">每組次數</Text>
+          <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
+            <TextInput
+              className="flex-1 text-lg"
               placeholder="0"
               keyboardType="number-pad"
               value={reps}
               onChangeText={onRepsChange}
             />
-            <Text className="text-gray-600 text-lg ml-3">下</Text>
+            <Text className="text-gray-600 text-base ml-2">下</Text>
           </View>
         </View>
       </View>
 
-      {/* 組數計數器 */}
-      <View className="mb-6">
-        <Text className="text-lg font-bold text-gray-700 mb-3">完成組數</Text>
-        <View className="bg-white rounded-xl p-6 items-center">
-          <SetCounter value={setCount} onChange={onSetCountChange} />
-        </View>
-      </View>
-
       {/* 難易度選擇 */}
-      <View className="mb-6">
-        <Text className="text-lg font-bold text-gray-700 mb-3">今天難易度</Text>
+      <View className="mb-4">
+        <Text className="text-base font-bold text-gray-700 mb-2">今天難易度</Text>
         <DifficultySelector value={difficulty} onChange={onDifficultyChange} />
       </View>
 
       {/* 備註 */}
-      <View className="mb-6">
-        <Text className="text-lg font-bold text-gray-700 mb-3">備註</Text>
+      <View className="mb-4">
+        <Text className="text-base font-bold text-gray-700 mb-2">備註</Text>
         <TextInput
-          className="bg-white rounded-xl p-4 text-base min-h-24"
+          className="bg-white rounded-xl p-3 text-base min-h-20"
           placeholder="記錄今天的訓練心得..."
           multiline
           textAlignVertical="top"
           value={notes}
           onChangeText={onNotesChange}
         />
+      </View>
+
+      {/* 組數計數器 */}
+      <View className="mb-4">
+        <Text className="text-base font-bold text-gray-700 mb-2">完成組數</Text>
+        <View className="bg-white rounded-xl py-4 items-center">
+          <SetCounter value={setCount} onChange={onSetCountChange} />
+        </View>
       </View>
     </View>
   );
