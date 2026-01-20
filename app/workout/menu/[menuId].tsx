@@ -96,20 +96,13 @@ export default function MenuWorkoutScreen() {
 
   const handleOpenRecord = async (item: MenuItemWithExercise) => {
     setSelectedExercise(item);
-    // 載入最近 3 筆紀錄
+    // 載入最近 3 筆紀錄供參考
     const records = await getRecentByExerciseId(item.exerciseId, 3);
     setRecentRecords(records);
-    // 預填最近一筆
-    if (records.length > 0) {
-      const recent = records[0];
-      setIsBodyweight(Boolean(recent.isBodyweight));
-      setWeight(recent.weight?.toString() || "");
-      setReps(recent.reps?.toString() || "");
-    } else {
-      setIsBodyweight(false);
-      setWeight("");
-      setReps("");
-    }
+    // 重置表單（不自動帶入預設值）
+    setIsBodyweight(false);
+    setWeight("");
+    setReps("");
     setSetCount(0);
     setDifficulty(3);
     setNotes("");
