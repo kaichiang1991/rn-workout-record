@@ -227,18 +227,37 @@ export async function initDatabase(): Promise<void> {
 
 async function seedDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
   const defaultExercises = [
+    // 腿部 & 蹲系列
     { name: "深蹲", bodyParts: ["legs"], description: "經典下肢訓練動作" },
+    { name: "腿推", bodyParts: ["legs"], description: "腿部機械訓練" },
+    // 推系列
     { name: "臥推", bodyParts: ["chest"], description: "胸部主要訓練動作" },
-    { name: "硬舉", bodyParts: ["back", "legs"], description: "全身性複合動作" },
+    { name: "啞鈴臥推", bodyParts: ["chest"], description: "使用啞鈴的胸部推舉動作" },
     { name: "肩推", bodyParts: ["shoulders"], description: "肩部訓練動作" },
+    { name: "器材肩推", bodyParts: ["shoulders"], description: "使用器材的肩部推舉動作" },
+    { name: "飛鳥", bodyParts: ["chest"], description: "胸部孤立訓練" },
+    { name: "側平舉", bodyParts: ["shoulders"], description: "肩部側三角肌孤立訓練" },
+    // 拉系列
+    { name: "划船", bodyParts: ["back"], description: "背部水平拉動作" },
+    { name: "坐姿划船", bodyParts: ["back"], description: "坐姿背部水平拉動作" },
+    { name: "高拉划船", bodyParts: ["back"], description: "高位划船動作" },
     { name: "引體向上", bodyParts: ["back", "arms"], description: "背部訓練經典動作" },
+    { name: "滑輪下拉", bodyParts: ["back"], description: "背部垂直拉動作" },
+    // 鉸鏈系列
+    { name: "硬舉", bodyParts: ["back", "legs"], description: "全身性複合動作" },
+    { name: "傳統硬舉", bodyParts: ["back", "legs"], description: "傳統姿勢的硬舉動作" },
+    { name: "羅馬尼亞硬舉", bodyParts: ["back", "legs"], description: "針對後鏈肌群的硬舉變化式" },
+    // 手臂
     { name: "二頭彎舉", bodyParts: ["arms"], description: "二頭肌孤立訓練" },
     { name: "三頭下壓", bodyParts: ["arms"], description: "三頭肌訓練" },
-    { name: "腿推", bodyParts: ["legs"], description: "腿部機械訓練" },
-    { name: "划船", bodyParts: ["back"], description: "背部水平拉動作" },
+    { name: "過頭三頭伸展", bodyParts: ["arms"], description: "三頭肌過頭伸展動作" },
+    // 核心
     { name: "平板支撐", bodyParts: ["core"], description: "核心穩定訓練" },
+    { name: "碰肩", bodyParts: ["core"], description: "核心抗旋轉訓練動作" },
+    { name: "反向捲腹", bodyParts: ["core"], description: "下腹部核心訓練" },
+    { name: "側棒式", bodyParts: ["core"], description: "核心側向穩定訓練" },
+    // 有氧
     { name: "跑步", bodyParts: ["cardio"], description: "有氧運動" },
-    { name: "飛鳥", bodyParts: ["chest"], description: "胸部孤立訓練" },
   ];
 
   for (const exercise of defaultExercises) {
