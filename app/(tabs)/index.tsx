@@ -87,14 +87,14 @@ export default function HomeScreen() {
             <View className="bg-primary-500 rounded-2xl p-4">
               <Text className="text-white/80 text-sm">本週運動</Text>
               <Text className="text-white text-3xl font-bold mt-1">{stats.thisWeekCount}</Text>
-              <Text className="text-white/80 text-sm">次</Text>
+              <Text className="text-white/80 text-sm">天</Text>
             </View>
           </View>
           <View className="flex-1">
             <View className="bg-green-500 rounded-2xl p-4">
               <Text className="text-white/80 text-sm">本月運動</Text>
               <Text className="text-white text-3xl font-bold mt-1">{stats.thisMonthCount}</Text>
-              <Text className="text-white/80 text-sm">次</Text>
+              <Text className="text-white/80 text-sm">天</Text>
             </View>
           </View>
         </View>
@@ -173,7 +173,7 @@ export default function HomeScreen() {
         {stats.totalCount > 0 && (
           <View className="mt-4">
             <StatsCard
-              title="累計運動次數"
+              title="累計運動天數"
               value={stats.totalCount}
               subtitle="持續努力中！"
               icon="trophy"

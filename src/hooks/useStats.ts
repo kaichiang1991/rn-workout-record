@@ -45,8 +45,9 @@ export function useStats() {
 
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      let thisWeekCount = 0;
-      let thisMonthCount = 0;
+      const thisWeekDays = new Set<string>();
+      const thisMonthDays = new Set<string>();
+      const totalDays = new Set<string>();
       let totalDifficulty = 0;
       let difficultyCount = 0;
       const difficultyDistribution = [0, 0, 0, 0, 0];
@@ -54,9 +55,12 @@ export function useStats() {
 
       for (const session of sessions) {
         const sessionDate = new Date(session.date);
+        // 使用 YYYY-MM-DD 格式作為日期的唯一識別
+        const dateKey = session.date.split("T")[0];
+        totalDays.add(dateKey);
 
         if (sessionDate >= weekStart) {
-          thisWeekCount++;
+          thisWeekDays.add(dateKey);
 
           // 統計每天運動次數（本週）
           const dayKey = sessionDate.toLocaleDateString("zh-TW", { weekday: "short" });
@@ -64,7 +68,7 @@ export function useStats() {
         }
 
         if (sessionDate >= monthStart) {
-          thisMonthCount++;
+          thisMonthDays.add(dateKey);
         }
 
         if (session.difficulty) {
@@ -81,10 +85,11 @@ export function useStats() {
         count: dailyCount[`週${day}`] || 0,
       }));
 
+      console.log({ weeklyWorkouts });
       setStats({
-        thisWeekCount,
-        thisMonthCount,
-        totalCount: sessions.length,
+        thisWeekCount: thisWeekDays.size,
+        thisMonthCount: thisMonthDays.size,
+        totalCount: totalDays.size,
         averageDifficulty: difficultyCount > 0 ? totalDifficulty / difficultyCount : 0,
         difficultyDistribution,
         weeklyWorkouts,
