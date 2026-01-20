@@ -25,7 +25,8 @@
       "Bash(sqlite3:*)",
       "Skill(superpowers:using-git-worktrees)",
       "Bash(git check-ignore:*)",
-      "Bash(npm run test:*)"
+      "Bash(npm run test:*)",
+      "Bash(xargs cat:*)"
     ]
   }
 }
