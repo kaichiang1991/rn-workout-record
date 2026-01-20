@@ -9,9 +9,10 @@ import { DIFFICULTY_LEVELS } from "@/utils/constants";
 export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getSessionById, deleteSession } = useWorkoutSessions();
+  const { getSessionById, getRecentDaysByExerciseId, deleteSession } = useWorkoutSessions();
   const { exercises } = useExercises();
   const [session, setSession] = useState<WorkoutSession | null>(null);
+  const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +25,10 @@ export default function WorkoutDetailScreen() {
     try {
       const data = await getSessionById(parseInt(id, 10));
       setSession(data);
+      if (data) {
+        const recent = await getRecentDaysByExerciseId(data.exerciseId, 7, data.id);
+        setRecentRecords(recent);
+      }
     } catch {
       Alert.alert("錯誤", "載入紀錄失敗");
     } finally {
@@ -69,6 +74,15 @@ export default function WorkoutDetailScreen() {
       weekday: "long",
       hour: "2-digit",
       minute: "2-digit",
+    });
+  };
+
+  const formatShortDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("zh-TW", {
+      month: "short",
+      day: "numeric",
+      weekday: "short",
     });
   };
 
@@ -166,6 +180,50 @@ export default function WorkoutDetailScreen() {
         >
           <Text className="text-red-500 font-medium">刪除紀錄</Text>
         </TouchableOpacity>
+
+        {/* 近7天紀錄 */}
+        <View className="mt-6">
+          <Text className="text-lg font-bold text-gray-700 mb-3">近 7 天紀錄</Text>
+          {recentRecords.length > 0 ? (
+            <ScrollView
+              className="bg-white rounded-xl"
+              style={{ maxHeight: 200 }}
+              nestedScrollEnabled
+            >
+              {recentRecords.map((record, index) => {
+                const recordDifficulty = getDifficultyInfo(record.difficulty);
+                return (
+                  <TouchableOpacity
+                    key={record.id}
+                    className={`p-4 flex-row justify-between items-center ${
+                      index < recentRecords.length - 1 ? "border-b border-gray-100" : ""
+                    }`}
+                    onPress={() => router.push(`/workout/${record.id}`)}
+                  >
+                    <View className="flex-1">
+                      <Text className="text-gray-800 font-medium">
+                        {formatShortDate(record.date)}
+                      </Text>
+                      <Text className="text-gray-500 text-sm mt-1">
+                        {record.isBodyweight ? "自體" : record.weight ? `${record.weight}kg` : "-"}{" "}
+                        · {record.reps ? `${record.reps}下` : "-"} ·{" "}
+                        {record.setCount ? `${record.setCount}組` : "-"}
+                      </Text>
+                    </View>
+                    <View
+                      className="w-6 h-6 rounded-full"
+                      style={{ backgroundColor: recordDifficulty.color }}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <View className="bg-white rounded-xl p-4">
+              <Text className="text-gray-500 text-center">無</Text>
+            </View>
+          )}
+        </View>
       </View>
     </ScrollView>
   );

@@ -76,6 +76,29 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
     []
   );
 
+  const getRecentDaysByExerciseId = useCallback(
+    async (exerciseId: number, days: number = 7, excludeId?: number): Promise<WorkoutSession[]> => {
+      const db = await getDatabase();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const startDateStr = startDate.toISOString();
+
+      let query = "SELECT * FROM workout_sessions WHERE exerciseId = ? AND date >= ?";
+      const params: (number | string)[] = [exerciseId, startDateStr];
+
+      if (excludeId !== undefined) {
+        query += " AND id != ?";
+        params.push(excludeId);
+      }
+
+      query += " ORDER BY date DESC, createdAt DESC";
+
+      const results = await db.getAllAsync<WorkoutSession>(query, params);
+      return results;
+    },
+    []
+  );
+
   const createSession = useCallback(async (input: CreateSessionInput): Promise<WorkoutSession> => {
     const db = await getDatabase();
 
@@ -126,6 +149,7 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
     refresh: fetchSessions,
     getSessionById,
     getRecentByExerciseId,
+    getRecentDaysByExerciseId,
     createSession,
     deleteSession,
   };
