@@ -1,5 +1,6 @@
 import { Tabs, useRouter } from "expo-router";
 import { View, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, TAB_ICONS } from "../../src/components/Icon";
 
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
@@ -30,6 +31,8 @@ function AddRecordButton() {
 }
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -40,8 +43,8 @@ export default function TabLayout() {
           borderTopWidth: 1,
           borderTopColor: "#e5e7eb",
           paddingTop: 8,
-          paddingBottom: 8,
-          height: 60,
+          paddingBottom: Math.max(insets.bottom, 8),
+          height: 60 + insets.bottom,
         },
         headerStyle: {
           backgroundColor: "#3b82f6",
