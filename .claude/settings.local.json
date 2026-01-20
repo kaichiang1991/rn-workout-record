@@ -20,7 +20,11 @@
       "Skill(superpowers:finishing-a-development-branch)",
       "Bash(git merge:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Skill(superpowers:systematic-debugging)",
+      "Bash(sqlite3:*)",
+      "Skill(superpowers:using-git-worktrees)",
+      "Bash(git check-ignore:*)"
     ]
   }
 }

@@ -95,78 +95,84 @@ export default function NewWorkoutScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="p-4">
-        {/* 部位選擇 */}
-        <View className="mb-4">
-          <Text className="text-lg font-bold text-gray-700 mb-3">選擇部位</Text>
-          <BodyPartSelector value={selectedBodyPart} onChange={handleBodyPartChange} />
-        </View>
-
-        {/* 運動項目選擇 */}
-        <View className="mb-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">選擇項目</Text>
-          {filteredExercises.length === 0 ? (
-            <View className="bg-white rounded-xl p-4">
-              <Text className="text-gray-500 text-center">此部位沒有項目</Text>
-            </View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {filteredExercises.map((exercise) => (
-                <TouchableOpacity
-                  key={exercise.id}
-                  className={`px-4 py-3 rounded-xl mr-2 ${
-                    selectedExerciseId === exercise.id
-                      ? "bg-primary-500"
-                      : "bg-white border border-gray-200"
-                  }`}
-                  onPress={() => setSelectedExerciseId(exercise.id)}
-                >
-                  <Text
-                    className={
-                      selectedExerciseId === exercise.id
-                        ? "text-white font-medium"
-                        : "text-gray-700"
-                    }
-                  >
-                    {exercise.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-          {selectedExerciseId && recentRecords.length > 0 && (
-            <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
-          )}
-        </View>
-
-        {/* 記錄表單 */}
-        <WorkoutRecordForm
-          isBodyweight={isBodyweight}
-          onIsBodyweightChange={setIsBodyweight}
-          weight={weight}
-          onWeightChange={setWeight}
-          reps={reps}
-          onRepsChange={setReps}
-          setCount={setCount}
-          onSetCountChange={setSetCount}
-          difficulty={difficulty}
-          onDifficultyChange={setDifficulty}
-          notes={notes}
-          onNotesChange={setNotes}
-        />
-
-        {/* 儲存按鈕 */}
-        <TouchableOpacity
-          className={`rounded-xl p-4 items-center ${saving ? "bg-gray-400" : "bg-primary-500"}`}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Text className="text-white text-lg font-semibold">
-            {saving ? "儲存中..." : "儲存紀錄"}
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="bg-white border-b border-gray-200 px-4 pt-12 pb-3 flex-row items-center justify-between">
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text className="text-gray-600 text-base">取消</Text>
+        </TouchableOpacity>
+        <Text className="text-lg font-bold text-gray-800">新增運動紀錄</Text>
+        <TouchableOpacity onPress={handleSave} disabled={saving}>
+          <Text
+            className={`text-base font-semibold ${saving ? "text-gray-400" : "text-primary-500"}`}
+          >
+            {saving ? "儲存中..." : "儲存"}
           </Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+
+      <ScrollView className="flex-1">
+        <View className="p-4">
+          {/* 部位選擇 */}
+          <View className="mb-4">
+            <Text className="text-lg font-bold text-gray-700 mb-3">選擇部位</Text>
+            <BodyPartSelector value={selectedBodyPart} onChange={handleBodyPartChange} />
+          </View>
+
+          {/* 運動項目選擇 */}
+          <View className="mb-6">
+            <Text className="text-lg font-bold text-gray-700 mb-3">選擇項目</Text>
+            {filteredExercises.length === 0 ? (
+              <View className="bg-white rounded-xl p-4">
+                <Text className="text-gray-500 text-center">此部位沒有項目</Text>
+              </View>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {filteredExercises.map((exercise) => (
+                  <TouchableOpacity
+                    key={exercise.id}
+                    className={`px-4 py-3 rounded-xl mr-2 ${
+                      selectedExerciseId === exercise.id
+                        ? "bg-primary-500"
+                        : "bg-white border border-gray-200"
+                    }`}
+                    onPress={() => setSelectedExerciseId(exercise.id)}
+                  >
+                    <Text
+                      className={
+                        selectedExerciseId === exercise.id
+                          ? "text-white font-medium"
+                          : "text-gray-700"
+                      }
+                    >
+                      {exercise.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+            {selectedExerciseId && recentRecords.length > 0 && (
+              <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
+            )}
+          </View>
+
+          {/* 記錄表單 */}
+          <WorkoutRecordForm
+            isBodyweight={isBodyweight}
+            onIsBodyweightChange={setIsBodyweight}
+            weight={weight}
+            onWeightChange={setWeight}
+            reps={reps}
+            onRepsChange={setReps}
+            setCount={setCount}
+            onSetCountChange={setSetCount}
+            difficulty={difficulty}
+            onDifficultyChange={setDifficulty}
+            notes={notes}
+            onNotesChange={setNotes}
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
