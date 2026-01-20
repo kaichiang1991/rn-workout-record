@@ -3,13 +3,24 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
 import { initDatabase } from "@/db/client";
 
 export default function RootLayout() {
+  const [dbReady, setDbReady] = useState(false);
+
   useEffect(() => {
-    initDatabase();
+    initDatabase().then(() => setDbReady(true));
   }, []);
+
+  if (!dbReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaProvider>

@@ -14,7 +14,7 @@ export default function HistoryScreen() {
   const { sessions, loading, refresh } = useWorkoutSessions({
     exerciseId: selectedExerciseId ?? undefined,
   });
-  const { exercises } = useExercises();
+  const { exercises, loading: exercisesLoading } = useExercises();
   const [refreshing, setRefreshing] = useState(false);
 
   // 當頁面獲得焦點時自動刷新數據
@@ -135,7 +135,7 @@ export default function HistoryScreen() {
         </ScrollView>
 
         {/* 紀錄列表 */}
-        {loading ? (
+        {loading || exercisesLoading ? (
           <View className="bg-white rounded-xl p-4">
             <Text className="text-gray-500 text-center">載入中...</Text>
           </View>

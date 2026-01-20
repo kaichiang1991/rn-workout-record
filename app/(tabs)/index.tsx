@@ -16,7 +16,7 @@ export default function HomeScreen() {
     loading: sessionsLoading,
     refresh: refreshSessions,
   } = useWorkoutSessions({ limit: 5 });
-  const { exercises } = useExercises();
+  const { exercises, loading: exercisesLoading } = useExercises();
   const { stats, refresh: refreshStats } = useStats();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -117,7 +117,7 @@ export default function HomeScreen() {
         {/* 最近紀錄 */}
         <View className="mb-4">
           <Text className="text-xl font-bold text-gray-800 mb-3">最近紀錄</Text>
-          {sessionsLoading ? (
+          {sessionsLoading || exercisesLoading ? (
             <View className="bg-white rounded-xl p-4">
               <Text className="text-gray-500 text-center">載入中...</Text>
             </View>

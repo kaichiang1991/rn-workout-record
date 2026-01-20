@@ -23,6 +23,16 @@ export async function initDatabase(): Promise<void> {
     );
   `);
 
+  // 建立 ExerciseBodyParts 關聯表
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS exercise_body_parts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      exerciseId INTEGER NOT NULL,
+      bodyPart TEXT NOT NULL,
+      FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
+    );
+  `);
+
   // 建立 WorkoutSession 表
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS workout_sessions (
@@ -31,6 +41,11 @@ export async function initDatabase(): Promise<void> {
       date TEXT NOT NULL,
       notes TEXT,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      weight REAL,
+      reps INTEGER,
+      setCount INTEGER,
+      difficulty INTEGER,
+      isBodyweight INTEGER DEFAULT 0,
       FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
     );
   `);
@@ -44,16 +59,6 @@ export async function initDatabase(): Promise<void> {
       reps INTEGER,
       weight REAL,
       FOREIGN KEY (sessionId) REFERENCES workout_sessions(id) ON DELETE CASCADE
-    );
-  `);
-
-  // 建立 ExerciseBodyParts 關聯表
-  await database.execAsync(`
-    CREATE TABLE IF NOT EXISTS exercise_body_parts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      exerciseId INTEGER NOT NULL,
-      bodyPart TEXT NOT NULL,
-      FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
     );
   `);
 
@@ -79,97 +84,6 @@ export async function initDatabase(): Promise<void> {
     );
   `);
 
-  // 遷移：新增 workout_sessions 欄位
-  const columns = await database.getAllAsync<{ name: string }>(
-    "PRAGMA table_info(workout_sessions)"
-  );
-  const columnNames = columns.map((c) => c.name);
-
-  if (!columnNames.includes("weight")) {
-    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN weight REAL");
-  }
-  if (!columnNames.includes("reps")) {
-    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN reps INTEGER");
-  }
-  if (!columnNames.includes("setCount")) {
-    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN setCount INTEGER");
-  }
-  if (!columnNames.includes("difficulty")) {
-    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN difficulty INTEGER");
-  }
-  if (!columnNames.includes("isBodyweight")) {
-    await database.execAsync(
-      "ALTER TABLE workout_sessions ADD COLUMN isBodyweight INTEGER DEFAULT 0"
-    );
-  }
-
-  // 清理可能殘留的暫存表格（從失敗的遷移中留下的）
-  await database.execAsync("DROP TABLE IF EXISTS workout_sessions_new;");
-  await database.execAsync("DROP TABLE IF EXISTS workout_sets_new;");
-
-  // 遷移：移除 workout_sessions 的 mood 欄位（已被 difficulty 取代）
-  const sessionColumns = await database.getAllAsync<{ name: string }>(
-    "PRAGMA table_info(workout_sessions)"
-  );
-  const sessionColumnNames = sessionColumns.map((c) => c.name);
-
-  if (sessionColumnNames.includes("mood")) {
-    // 先將 mood 資料複製到 difficulty（如果尚未遷移）
-    await database.execAsync(
-      "UPDATE workout_sessions SET difficulty = mood WHERE difficulty IS NULL AND mood IS NOT NULL"
-    );
-
-    // 使用 SQLite 標準方式移除欄位：重建表格
-    await database.execAsync(`
-      CREATE TABLE workout_sessions_new (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        exerciseId INTEGER NOT NULL,
-        date TEXT NOT NULL,
-        notes TEXT,
-        createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-        weight REAL,
-        reps INTEGER,
-        setCount INTEGER,
-        difficulty INTEGER,
-        isBodyweight INTEGER DEFAULT 0,
-        FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
-      );
-    `);
-    await database.execAsync(`
-      INSERT INTO workout_sessions_new (id, exerciseId, date, notes, createdAt, weight, reps, setCount, difficulty, isBodyweight)
-      SELECT id, exerciseId, date, notes, createdAt, weight, reps, setCount, difficulty, isBodyweight
-      FROM workout_sessions;
-    `);
-    await database.execAsync("DROP TABLE workout_sessions;");
-    await database.execAsync("ALTER TABLE workout_sessions_new RENAME TO workout_sessions;");
-  }
-
-  // 遷移：移除 workout_sets 的 duration 和 notes 欄位（從未使用）
-  const setColumns = await database.getAllAsync<{ name: string }>(
-    "PRAGMA table_info(workout_sets)"
-  );
-  const setColumnNames = setColumns.map((c) => c.name);
-
-  if (setColumnNames.includes("duration") || setColumnNames.includes("notes")) {
-    await database.execAsync(`
-      CREATE TABLE workout_sets_new (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        sessionId INTEGER NOT NULL,
-        setNumber INTEGER NOT NULL,
-        reps INTEGER,
-        weight REAL,
-        FOREIGN KEY (sessionId) REFERENCES workout_sessions(id) ON DELETE CASCADE
-      );
-    `);
-    await database.execAsync(`
-      INSERT INTO workout_sets_new (id, sessionId, setNumber, reps, weight)
-      SELECT id, sessionId, setNumber, reps, weight
-      FROM workout_sets;
-    `);
-    await database.execAsync("DROP TABLE workout_sets;");
-    await database.execAsync("ALTER TABLE workout_sets_new RENAME TO workout_sets;");
-  }
-
   // 檢查是否需要加入預設資料
   const result = await database.getFirstAsync<{ count: number }>(
     "SELECT COUNT(*) as count FROM exercises"
@@ -177,51 +91,6 @@ export async function initDatabase(): Promise<void> {
 
   if (result && result.count === 0) {
     await seedDatabase(database);
-  }
-
-  // 清理可能殘留的暫存表格
-  await database.execAsync("DROP TABLE IF EXISTS exercises_new;");
-
-  // 遷移：檢查 exercises 表是否還有 category 欄位
-  const exerciseColumns = await database.getAllAsync<{ name: string }>(
-    "PRAGMA table_info(exercises)"
-  );
-  const exerciseColumnNames = exerciseColumns.map((c) => c.name);
-
-  if (exerciseColumnNames.includes("category")) {
-    // 先確保每個 exercise 都有對應的 body_part 關聯
-    // 如果 exercise 存在但沒有 body_part 關聯，則根據 category 建立關聯
-    const exercisesWithoutBodyParts = await database.getAllAsync<{ id: number; category: string }>(
-      `SELECT e.id, e.category
-       FROM exercises e
-       LEFT JOIN exercise_body_parts bp ON e.id = bp.exerciseId
-       WHERE bp.id IS NULL AND e.category IS NOT NULL`
-    );
-
-    for (const exercise of exercisesWithoutBodyParts) {
-      await database.runAsync(
-        "INSERT INTO exercise_body_parts (exerciseId, bodyPart) VALUES (?, ?)",
-        [exercise.id, exercise.category]
-      );
-    }
-
-    // 移除 category 欄位
-    await database.execAsync(`
-      CREATE TABLE exercises_new (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        description TEXT,
-        createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-        isActive INTEGER DEFAULT 1
-      );
-    `);
-    await database.execAsync(`
-      INSERT INTO exercises_new (id, name, description, createdAt, isActive)
-      SELECT id, name, description, createdAt, isActive
-      FROM exercises;
-    `);
-    await database.execAsync("DROP TABLE exercises;");
-    await database.execAsync("ALTER TABLE exercises_new RENAME TO exercises;");
   }
 }
 
