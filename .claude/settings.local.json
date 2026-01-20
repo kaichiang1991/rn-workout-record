@@ -29,5 +29,6 @@
       "Bash(xargs cat:*)",
       "Skill(commit-commands:commit)"
     ]
-  }
+  },
+  "outputStyle": "Explanatory"
 }

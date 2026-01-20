@@ -82,7 +82,7 @@ export default function HomeScreen() {
     >
       <View className="p-4">
         {/* 統計卡片區 */}
-        <View className="flex-row gap-3 mb-4">
+        <View className="flex-row gap-3 mb-3">
           <View className="flex-1">
             <View className="bg-primary-500 rounded-2xl p-4">
               <Text className="text-white/80 text-sm">本週運動</Text>
@@ -96,6 +96,28 @@ export default function HomeScreen() {
               <Text className="text-white text-3xl font-bold mt-1">{stats.thisMonthCount}</Text>
               <Text className="text-white/80 text-sm">天</Text>
             </View>
+          </View>
+        </View>
+
+        {/* 本週運動日曆 */}
+        <View className="bg-white rounded-xl p-4 mb-4">
+          <View className="flex-row justify-between">
+            {stats.weeklyStatus.map((dayStatus) => (
+              <View key={dayStatus.date} className="items-center flex-1">
+                <Text className="text-gray-500 text-xs mb-2">{dayStatus.day}</Text>
+                <View
+                  className={`w-8 h-8 rounded-full items-center justify-center ${
+                    dayStatus.isToday ? "bg-gray-100" : ""
+                  }`}
+                >
+                  <View
+                    className={`w-5 h-5 rounded-full ${
+                      dayStatus.hasWorkout ? "bg-primary-500" : "border-2 border-gray-300"
+                    }`}
+                  />
+                </View>
+              </View>
+            ))}
           </View>
         </View>
 

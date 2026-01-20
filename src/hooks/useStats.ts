@@ -8,6 +8,13 @@ interface ExerciseProgress {
   totalSets: number;
 }
 
+interface WeekDayStatus {
+  day: string; // "日", "一", "二" 等
+  date: string; // YYYY-MM-DD 格式
+  hasWorkout: boolean;
+  isToday: boolean;
+}
+
 interface Stats {
   thisWeekCount: number;
   thisMonthCount: number;
@@ -15,6 +22,7 @@ interface Stats {
   averageDifficulty: number;
   difficultyDistribution: number[];
   weeklyWorkouts: { day: string; count: number }[];
+  weeklyStatus: WeekDayStatus[];
 }
 
 export function useStats() {
@@ -25,6 +33,7 @@ export function useStats() {
     averageDifficulty: 0,
     difficultyDistribution: [0, 0, 0, 0, 0],
     weeklyWorkouts: [],
+    weeklyStatus: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -85,7 +94,20 @@ export function useStats() {
         count: dailyCount[`週${day}`] || 0,
       }));
 
-      console.log({ weeklyWorkouts });
+      // 建立本週每日狀態（週日到週六）
+      const todayStr = now.toISOString().split("T")[0];
+      const weeklyStatus: WeekDayStatus[] = days.map((day, index) => {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + index);
+        const dateStr = date.toISOString().split("T")[0];
+        return {
+          day,
+          date: dateStr,
+          hasWorkout: thisWeekDays.has(dateStr),
+          isToday: dateStr === todayStr,
+        };
+      });
+
       setStats({
         thisWeekCount: thisWeekDays.size,
         thisMonthCount: thisMonthDays.size,
@@ -93,6 +115,7 @@ export function useStats() {
         averageDifficulty: difficultyCount > 0 ? totalDifficulty / difficultyCount : 0,
         difficultyDistribution,
         weeklyWorkouts,
+        weeklyStatus,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
