@@ -12,8 +12,8 @@ interface Stats {
   thisWeekCount: number;
   thisMonthCount: number;
   totalCount: number;
-  averageMood: number;
-  moodDistribution: number[];
+  averageDifficulty: number;
+  difficultyDistribution: number[];
   weeklyWorkouts: { day: string; count: number }[];
 }
 
@@ -22,8 +22,8 @@ export function useStats() {
     thisWeekCount: 0,
     thisMonthCount: 0,
     totalCount: 0,
-    averageMood: 0,
-    moodDistribution: [0, 0, 0, 0, 0],
+    averageDifficulty: 0,
+    difficultyDistribution: [0, 0, 0, 0, 0],
     weeklyWorkouts: [],
   });
   const [loading, setLoading] = useState(true);
@@ -47,9 +47,9 @@ export function useStats() {
 
       let thisWeekCount = 0;
       let thisMonthCount = 0;
-      let totalMood = 0;
-      let moodCount = 0;
-      const moodDistribution = [0, 0, 0, 0, 0];
+      let totalDifficulty = 0;
+      let difficultyCount = 0;
+      const difficultyDistribution = [0, 0, 0, 0, 0];
       const dailyCount: Record<string, number> = {};
 
       for (const session of sessions) {
@@ -67,10 +67,10 @@ export function useStats() {
           thisMonthCount++;
         }
 
-        if (session.mood) {
-          totalMood += session.mood;
-          moodCount++;
-          moodDistribution[session.mood - 1]++;
+        if (session.difficulty) {
+          totalDifficulty += session.difficulty;
+          difficultyCount++;
+          difficultyDistribution[session.difficulty - 1]++;
         }
       }
 
@@ -85,8 +85,8 @@ export function useStats() {
         thisWeekCount,
         thisMonthCount,
         totalCount: sessions.length,
-        averageMood: moodCount > 0 ? totalMood / moodCount : 0,
-        moodDistribution,
+        averageDifficulty: difficultyCount > 0 ? totalDifficulty / difficultyCount : 0,
+        difficultyDistribution,
         weeklyWorkouts,
       });
     } catch (error) {

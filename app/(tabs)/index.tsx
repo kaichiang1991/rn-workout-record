@@ -91,15 +91,15 @@ export default function HomeScreen() {
         </View>
 
         {/* 平均難易度 */}
-        {stats.averageMood > 0 && (
+        {stats.averageDifficulty > 0 && (
           <View className="bg-white rounded-xl p-4 mb-4">
             <Text className="text-gray-700 font-medium mb-2">平均難易度</Text>
             <View className="flex-row items-center">
-              {renderDifficultyDot(Math.round(stats.averageMood), 28)}
+              {renderDifficultyDot(Math.round(stats.averageDifficulty), 28)}
               <Text className="text-gray-600 ml-2">
-                {DIFFICULTY_LEVELS.find((l) => l.value === Math.round(stats.averageMood))?.label ||
-                  ""}{" "}
-                ({stats.averageMood.toFixed(1)})
+                {DIFFICULTY_LEVELS.find((l) => l.value === Math.round(stats.averageDifficulty))
+                  ?.label || ""}{" "}
+                ({stats.averageDifficulty.toFixed(1)})
               </Text>
             </View>
           </View>

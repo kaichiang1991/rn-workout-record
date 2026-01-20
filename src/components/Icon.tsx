@@ -21,12 +21,7 @@ export type IconName =
   | "arms"
   | "core"
   | "cardio"
-  | "other"
-  | "mood-1"
-  | "mood-2"
-  | "mood-3"
-  | "mood-4"
-  | "mood-5";
+  | "other";
 
 interface IconProps {
   name: IconName;
@@ -83,18 +78,6 @@ export function Icon({ name, size = 24, color = "#374151" }: IconProps) {
       return <MaterialCommunityIcons name="run" size={size} color={color} />;
     case "other":
       return <MaterialCommunityIcons name="weight-lifter" size={size} color={color} />;
-
-    // Mood/Difficulty icons (1-5 scale using circles)
-    case "mood-1":
-      return <Ionicons name="happy-outline" size={size} color={color} />;
-    case "mood-2":
-      return <Ionicons name="sad-outline" size={size} color={color} />;
-    case "mood-3":
-      return <Ionicons name="remove-circle-outline" size={size} color={color} />;
-    case "mood-4":
-      return <Ionicons name="happy-outline" size={size} color={color} />;
-    case "mood-5":
-      return <Ionicons name="flame-outline" size={size} color={color} />;
 
     default:
       return <Feather name="circle" size={size} color={color} />;

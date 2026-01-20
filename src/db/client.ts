@@ -30,7 +30,6 @@ export async function initDatabase(): Promise<void> {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       exerciseId INTEGER NOT NULL,
       date TEXT NOT NULL,
-      mood INTEGER,
       notes TEXT,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
@@ -45,8 +44,6 @@ export async function initDatabase(): Promise<void> {
       setNumber INTEGER NOT NULL,
       reps INTEGER,
       weight REAL,
-      duration INTEGER,
-      notes TEXT,
       FOREIGN KEY (sessionId) REFERENCES workout_sessions(id) ON DELETE CASCADE
     );
   `);
@@ -107,10 +104,72 @@ export async function initDatabase(): Promise<void> {
     );
   }
 
-  // 遷移：將現有 mood 資料複製到 difficulty
-  await database.execAsync(
-    "UPDATE workout_sessions SET difficulty = mood WHERE difficulty IS NULL AND mood IS NOT NULL"
+  // 清理可能殘留的暫存表格（從失敗的遷移中留下的）
+  await database.execAsync("DROP TABLE IF EXISTS workout_sessions_new;");
+  await database.execAsync("DROP TABLE IF EXISTS workout_sets_new;");
+
+  // 遷移：移除 workout_sessions 的 mood 欄位（已被 difficulty 取代）
+  const sessionColumns = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(workout_sessions)"
   );
+  const sessionColumnNames = sessionColumns.map((c) => c.name);
+
+  if (sessionColumnNames.includes("mood")) {
+    // 先將 mood 資料複製到 difficulty（如果尚未遷移）
+    await database.execAsync(
+      "UPDATE workout_sessions SET difficulty = mood WHERE difficulty IS NULL AND mood IS NOT NULL"
+    );
+
+    // 使用 SQLite 標準方式移除欄位：重建表格
+    await database.execAsync(`
+      CREATE TABLE workout_sessions_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        exerciseId INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        notes TEXT,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        weight REAL,
+        reps INTEGER,
+        setCount INTEGER,
+        difficulty INTEGER,
+        isBodyweight INTEGER DEFAULT 0,
+        FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
+      );
+    `);
+    await database.execAsync(`
+      INSERT INTO workout_sessions_new (id, exerciseId, date, notes, createdAt, weight, reps, setCount, difficulty, isBodyweight)
+      SELECT id, exerciseId, date, notes, createdAt, weight, reps, setCount, difficulty, isBodyweight
+      FROM workout_sessions;
+    `);
+    await database.execAsync("DROP TABLE workout_sessions;");
+    await database.execAsync("ALTER TABLE workout_sessions_new RENAME TO workout_sessions;");
+  }
+
+  // 遷移：移除 workout_sets 的 duration 和 notes 欄位（從未使用）
+  const setColumns = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(workout_sets)"
+  );
+  const setColumnNames = setColumns.map((c) => c.name);
+
+  if (setColumnNames.includes("duration") || setColumnNames.includes("notes")) {
+    await database.execAsync(`
+      CREATE TABLE workout_sets_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sessionId INTEGER NOT NULL,
+        setNumber INTEGER NOT NULL,
+        reps INTEGER,
+        weight REAL,
+        FOREIGN KEY (sessionId) REFERENCES workout_sessions(id) ON DELETE CASCADE
+      );
+    `);
+    await database.execAsync(`
+      INSERT INTO workout_sets_new (id, sessionId, setNumber, reps, weight)
+      SELECT id, sessionId, setNumber, reps, weight
+      FROM workout_sets;
+    `);
+    await database.execAsync("DROP TABLE workout_sets;");
+    await database.execAsync("ALTER TABLE workout_sets_new RENAME TO workout_sets;");
+  }
 
   // 檢查是否需要加入預設資料
   const result = await database.getFirstAsync<{ count: number }>(
@@ -168,7 +227,6 @@ export interface WorkoutSession {
   id: number;
   exerciseId: number;
   date: string;
-  mood: number | null; // 保留相容性
   weight: number | null;
   reps: number | null;
   setCount: number | null;
@@ -190,8 +248,6 @@ export interface WorkoutSet {
   setNumber: number;
   reps: number | null;
   weight: number | null;
-  duration: number | null;
-  notes: string | null;
 }
 
 export interface WorkoutSessionWithSets extends WorkoutSession {

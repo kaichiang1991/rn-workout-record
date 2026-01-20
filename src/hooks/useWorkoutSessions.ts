@@ -99,7 +99,6 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
       id: sessionResult.lastInsertRowId,
       exerciseId: input.exerciseId,
       date: input.date,
-      mood: null,
       weight: input.isBodyweight ? null : input.weight,
       reps: input.reps,
       setCount: input.setCount,
