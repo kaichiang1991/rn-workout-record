@@ -17,11 +17,11 @@ export type IconName =
   | "chest"
   | "back"
   | "legs"
+  | "hips"
   | "shoulders"
   | "arms"
   | "core"
-  | "cardio"
-  | "other";
+  | "cardio";
 
 interface IconProps {
   name: IconName;
@@ -68,6 +68,8 @@ export function Icon({ name, size = 24, color = "#374151" }: IconProps) {
       return <MaterialCommunityIcons name="human-handsup" size={size} color={color} />;
     case "legs":
       return <MaterialCommunityIcons name="human-male" size={size} color={color} />;
+    case "hips":
+      return <MaterialCommunityIcons name="meditation" size={size} color={color} />;
     case "shoulders":
       return <MaterialCommunityIcons name="arm-flex-outline" size={size} color={color} />;
     case "arms":
@@ -76,8 +78,6 @@ export function Icon({ name, size = 24, color = "#374151" }: IconProps) {
       return <Ionicons name="fitness-outline" size={size} color={color} />;
     case "cardio":
       return <MaterialCommunityIcons name="run" size={size} color={color} />;
-    case "other":
-      return <MaterialCommunityIcons name="weight-lifter" size={size} color={color} />;
 
     default:
       return <Feather name="circle" size={size} color={color} />;
@@ -89,11 +89,11 @@ export const BODY_PART_ICONS: Record<string, IconName> = {
   chest: "chest",
   back: "back",
   legs: "legs",
+  hips: "hips",
   shoulders: "shoulders",
   arms: "arms",
   core: "core",
   cardio: "cardio",
-  other: "other",
 };
 
 // Tab icon mapping

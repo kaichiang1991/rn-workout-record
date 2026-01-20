@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useExercises } from "@/hooks/useExercises";
+import { BODY_PARTS, BodyPartKey } from "@/utils/constants";
 import { Icon, BODY_PART_ICONS, type IconName } from "@/components/Icon";
 
 export default function ExercisesScreen() {
@@ -30,7 +31,8 @@ export default function ExercisesScreen() {
   const groupedExercises = activeExercises.reduce(
     (acc, exercise) => {
       const bodyParts = exerciseBodyParts.filter((bp) => bp.exerciseId === exercise.id);
-      const primaryBodyPart = bodyParts.length > 0 ? bodyParts[0].bodyPart : "other";
+      // 沒有設定部位的項目放在 core（核心）分類下
+      const primaryBodyPart = bodyParts.length > 0 ? bodyParts[0].bodyPart : "core";
       if (!acc[primaryBodyPart]) {
         acc[primaryBodyPart] = [];
       }
@@ -39,17 +41,6 @@ export default function ExercisesScreen() {
     },
     {} as Record<string, typeof exercises>
   );
-
-  const categoryNames: Record<string, string> = {
-    chest: "胸部",
-    back: "背部",
-    legs: "腿部",
-    shoulders: "肩膀",
-    arms: "手臂",
-    core: "核心",
-    cardio: "有氧",
-    other: "其他",
-  };
 
   return (
     <ScrollView
@@ -82,13 +73,13 @@ export default function ExercisesScreen() {
               <View className="flex-row items-center mb-3">
                 <View className="mr-2">
                   <Icon
-                    name={(BODY_PART_ICONS[category] || "other") as IconName}
+                    name={(BODY_PART_ICONS[category] || "core") as IconName}
                     size={20}
                     color="#374151"
                   />
                 </View>
                 <Text className="text-lg font-bold text-gray-700">
-                  {categoryNames[category] || category}
+                  {BODY_PARTS[category as BodyPartKey]?.label || category}
                 </Text>
                 <Text className="text-gray-400 ml-2">({items.length})</Text>
               </View>

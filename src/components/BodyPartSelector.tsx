@@ -31,7 +31,7 @@ export function BodyPartSelector({ value, onChange }: BodyPartSelectorProps) {
           onPress={() => onChange(key)}
         >
           <Text className={value === key ? "text-white font-medium" : "text-gray-700"}>
-            {part.label}
+            {part.shortLabel}
           </Text>
         </TouchableOpacity>
       ))}

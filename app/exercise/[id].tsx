@@ -2,10 +2,10 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Switch } fr
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useExercises } from "@/hooks/useExercises";
-import { CATEGORIES } from "@/utils/constants";
+import { BODY_PARTS } from "@/utils/constants";
 import { Icon } from "@/components/Icon";
 
-const categories = Object.entries(CATEGORIES).map(([value, { label, icon }]) => ({
+const bodyPartOptions = Object.entries(BODY_PARTS).map(([value, { label, icon }]) => ({
   value,
   label,
   icon,
@@ -33,7 +33,7 @@ export default function EditExerciseScreen() {
     if (exercise) {
       setName(exercise.name);
       const bodyParts = getBodyPartsForExercise(exercise.id);
-      setSelectedBodyParts(bodyParts.length > 0 ? bodyParts : ["other"]);
+      setSelectedBodyParts(bodyParts.length > 0 ? bodyParts : ["core"]);
       setDescription(exercise.description || "");
       setIsActive(exercise.isActive);
       setLoading(false);
@@ -117,21 +117,21 @@ export default function EditExerciseScreen() {
         <View className="mb-6">
           <Text className="text-lg font-bold text-gray-700 mb-3">分類（可多選）</Text>
           <View className="flex-row flex-wrap">
-            {categories.map((cat) => {
-              const isSelected = selectedBodyParts.includes(cat.value);
+            {bodyPartOptions.map((part) => {
+              const isSelected = selectedBodyParts.includes(part.value);
               return (
                 <TouchableOpacity
-                  key={cat.value}
+                  key={part.value}
                   className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
                     isSelected ? "bg-primary-500" : "bg-white border border-gray-200"
                   }`}
-                  onPress={() => toggleBodyPart(cat.value)}
+                  onPress={() => toggleBodyPart(part.value)}
                 >
                   <View className="mr-1">
-                    <Icon name={cat.icon} size={16} color={isSelected ? "#ffffff" : "#374151"} />
+                    <Icon name={part.icon} size={16} color={isSelected ? "#ffffff" : "#374151"} />
                   </View>
                   <Text className={isSelected ? "text-white font-medium" : "text-gray-700"}>
-                    {cat.label}
+                    {part.label}
                   </Text>
                 </TouchableOpacity>
               );

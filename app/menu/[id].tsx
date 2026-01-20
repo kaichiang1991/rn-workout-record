@@ -271,7 +271,7 @@ export default function MenuDetailScreen() {
               <Text
                 className={selectedBodyPart === key ? "text-white font-medium" : "text-gray-700"}
               >
-                {part.label}
+                {part.shortLabel}
               </Text>
             </TouchableOpacity>
           ))}
