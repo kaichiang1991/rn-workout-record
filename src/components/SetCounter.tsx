@@ -8,12 +8,17 @@ interface SetCounterProps {
 
 export function SetCounter({ value, onChange }: SetCounterProps) {
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTriggered = useRef(false);
 
   const handlePress = () => {
+    if (longPressTriggered.current) {
+      return;
+    }
     onChange(value + 1);
   };
 
   const handleLongPress = () => {
+    longPressTriggered.current = true;
     if (value > 0) {
       Vibration.vibrate(50);
       onChange(value - 1);
@@ -21,6 +26,7 @@ export function SetCounter({ value, onChange }: SetCounterProps) {
   };
 
   const handlePressIn = () => {
+    longPressTriggered.current = false;
     longPressTimer.current = setTimeout(() => {
       handleLongPress();
     }, 500);
