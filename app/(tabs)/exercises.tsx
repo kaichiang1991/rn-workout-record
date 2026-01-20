@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { useExercises } from "@/hooks/useExercises";
 import { Icon, BODY_PART_ICONS, type IconName } from "@/components/Icon";
 
@@ -8,6 +9,13 @@ export default function ExercisesScreen() {
   const router = useRouter();
   const { exercises, exerciseBodyParts, loading, refresh } = useExercises();
   const [refreshing, setRefreshing] = useState(false);
+
+  // 當頁面獲得焦點時自動刷新數據
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

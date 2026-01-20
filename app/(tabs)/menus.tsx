@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useCallback, useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { useTrainingMenus } from "@/hooks/useTrainingMenus";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -16,6 +17,13 @@ export default function MenusScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [menuCounts, setMenuCounts] = useState<Record<number, number>>({});
   const [menuProgress, setMenuProgress] = useState<Record<number, MenuProgress>>({});
+
+  // 當頁面獲得焦點時自動刷新數據
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
