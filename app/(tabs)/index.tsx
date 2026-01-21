@@ -6,6 +6,7 @@ import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
 import { useStats } from "@/hooks/useStats";
 import { StatsCard } from "@/components/charts/StatsCard";
+import { BodyPartRadar } from "@/components/charts/BodyPartRadar";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
 import { Icon } from "@/components/Icon";
 
@@ -202,6 +203,11 @@ export default function HomeScreen() {
               color="orange"
             />
           )}
+        </View>
+
+        {/* 訓練分佈雷達圖 */}
+        <View className="mt-4">
+          <BodyPartRadar />
         </View>
       </View>
     </ScrollView>
