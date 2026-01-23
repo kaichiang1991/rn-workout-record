@@ -15,6 +15,7 @@ export type IconName =
   | "arrow-left"
   | "check"
   | "chart"
+  | "swap"
   | "chest"
   | "back"
   | "legs"
@@ -63,6 +64,8 @@ export function Icon({ name, size = 24, color = "#374151" }: IconProps) {
       return <Feather name="check" size={size} color={color} />;
     case "chart":
       return <Feather name="bar-chart-2" size={size} color={color} />;
+    case "swap":
+      return <Ionicons name="swap-horizontal" size={size} color={color} />;
 
     // Body part icons
     case "chest":

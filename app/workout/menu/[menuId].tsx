@@ -4,10 +4,12 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTrainingMenus, MenuItemWithExercise } from "@/hooks/useTrainingMenus";
 import { useMenuSession } from "@/hooks/useMenuSession";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
+import { useExercises } from "@/hooks/useExercises";
 import { WorkoutRecordForm } from "@/components/WorkoutRecordForm";
 import { RecentRecordsList } from "@/components/RecentRecordsList";
+import { ExercisePickerModal } from "@/components/ExercisePickerModal";
 import { Icon } from "@/components/Icon";
-import { WorkoutSession } from "@/db/client";
+import { WorkoutSession, Exercise } from "@/db/client";
 
 export default function MenuWorkoutScreen() {
   const router = useRouter();
@@ -16,6 +18,7 @@ export default function MenuWorkoutScreen() {
 
   const { menus, getMenuItems } = useTrainingMenus();
   const { createSession, getRecentByExerciseId, getSessionById } = useWorkoutSessions();
+  const { exercises, exerciseBodyParts, getBodyPartsForExercise } = useExercises();
   const {
     loading: sessionLoading,
     hasActiveSession,
@@ -31,9 +34,15 @@ export default function MenuWorkoutScreen() {
   const [menuItems, setMenuItems] = useState<MenuItemWithExercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedExercise, setSelectedExercise] = useState<MenuItemWithExercise | null>(null);
+  const [currentExercise, setCurrentExercise] = useState<{ id: number; name: string } | null>(null);
   const [showRecordModal, setShowRecordModal] = useState(false);
+  const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   const [completedSessions, setCompletedSessions] = useState<Record<number, WorkoutSession[]>>({});
+  // 追蹤本次訓練中替換的動作 (原 exerciseId -> 替換後的動作)
+  const [swappedExercises, setSwappedExercises] = useState<
+    Record<number, { id: number; name: string }>
+  >({});
 
   // 表單狀態
   const [isBodyweight, setIsBodyweight] = useState(false);
@@ -96,8 +105,12 @@ export default function MenuWorkoutScreen() {
 
   const handleOpenRecord = async (item: MenuItemWithExercise) => {
     setSelectedExercise(item);
-    // 載入最近 3 筆紀錄供參考
-    const records = await getRecentByExerciseId(item.exerciseId, 3);
+    // 如果之前有替換過，使用替換後的動作
+    const swapped = swappedExercises[item.exerciseId];
+    const exerciseToUse = swapped || { id: item.exerciseId, name: item.exerciseName };
+    setCurrentExercise(exerciseToUse);
+    // 載入最近 3 筆紀錄供參考（使用實際記錄的動作 ID）
+    const records = await getRecentByExerciseId(exerciseToUse.id, 3);
     setRecentRecords(records);
     // 重置表單（不自動帶入預設值）
     setIsBodyweight(false);
@@ -107,6 +120,18 @@ export default function MenuWorkoutScreen() {
     setDifficulty(3);
     setNotes("");
     setShowRecordModal(true);
+  };
+
+  const handleExerciseSwap = async (exercise: Exercise) => {
+    setCurrentExercise({ id: exercise.id, name: exercise.name });
+    // 載入新動作的最近紀錄
+    const records = await getRecentByExerciseId(exercise.id, 3);
+    setRecentRecords(records);
+    // 重置表單
+    setIsBodyweight(false);
+    setWeight("");
+    setReps("");
+    setSetCount(0);
   };
 
   const handleSelectRecentRecord = (record: WorkoutSession) => {
@@ -122,7 +147,7 @@ export default function MenuWorkoutScreen() {
   };
 
   const handleSaveRecord = async () => {
-    if (!selectedExercise) return;
+    if (!selectedExercise || !currentExercise) return;
 
     if (setCount < 1) {
       Alert.alert("提示", "請至少完成一組");
@@ -142,7 +167,7 @@ export default function MenuWorkoutScreen() {
     setSaving(true);
     try {
       const session = await createSession({
-        exerciseId: selectedExercise.exerciseId,
+        exerciseId: currentExercise.id,
         date: new Date().toISOString(),
         weight: isBodyweight ? null : parseFloat(weight),
         reps: parseInt(reps, 10),
@@ -151,16 +176,26 @@ export default function MenuWorkoutScreen() {
         isBodyweight,
         notes: notes.trim() || null,
       });
+      // 使用原本菜單項目的 exerciseId 來標記完成
       await recordExercise(selectedExercise.exerciseId, session.id);
 
-      // 更新已完成的 sessions
+      // 更新已完成的 sessions（使用原本的 exerciseId）
       setCompletedSessions((prev) => ({
         ...prev,
         [selectedExercise.exerciseId]: [...(prev[selectedExercise.exerciseId] || []), session],
       }));
 
+      // 如果有替換動作，記錄下來供列表顯示
+      if (currentExercise.id !== selectedExercise.exerciseId) {
+        setSwappedExercises((prev) => ({
+          ...prev,
+          [selectedExercise.exerciseId]: currentExercise,
+        }));
+      }
+
       setShowRecordModal(false);
       setSelectedExercise(null);
+      setCurrentExercise(null);
     } catch {
       Alert.alert("錯誤", "儲存失敗，請稍後再試");
     } finally {
@@ -273,6 +308,9 @@ export default function MenuWorkoutScreen() {
               const isCompleted = isExerciseCompleted(item.exerciseId);
               const isExpanded = expandedItems.has(item.exerciseId);
               const sessions = completedSessions[item.exerciseId] || [];
+              // 檢查是否有替換動作
+              const swapped = swappedExercises[item.exerciseId];
+              const displayName = swapped ? swapped.name : item.exerciseName;
 
               return (
                 <View key={item.id} className="bg-white rounded-xl mb-3 overflow-hidden">
@@ -295,13 +333,13 @@ export default function MenuWorkoutScreen() {
                       {isCompleted && <Icon name="check" size={14} color="#fff" />}
                     </View>
 
-                    {/* 項目名稱 */}
+                    {/* 項目名稱 - 顯示替換後的名稱（如果有替換） */}
                     <Text
                       className={`flex-1 text-base ${
                         isCompleted ? "text-gray-500" : "text-gray-800 font-medium"
                       }`}
                     >
-                      {item.exerciseName}
+                      {displayName}
                     </Text>
 
                     {/* 操作按鈕 */}
@@ -360,14 +398,12 @@ export default function MenuWorkoutScreen() {
         onRequestClose={() => setShowRecordModal(false)}
       >
         <View className="flex-1 bg-gray-50">
-          {/* Modal Header */}
+          {/* Modal Header - 顯示菜單名稱 */}
           <View className="bg-white border-b border-gray-200 px-4 pt-4 pb-3 flex-row items-center justify-between">
             <TouchableOpacity onPress={() => setShowRecordModal(false)}>
               <Text className="text-gray-600 text-base">取消</Text>
             </TouchableOpacity>
-            <Text className="text-lg font-bold text-gray-800">
-              {selectedExercise?.exerciseName}
-            </Text>
+            <Text className="text-lg font-bold text-gray-800">{menu?.name}</Text>
             <TouchableOpacity onPress={handleSaveRecord} disabled={saving}>
               <Text
                 className={`text-base font-semibold ${
@@ -381,6 +417,14 @@ export default function MenuWorkoutScreen() {
 
           {/* 表單 */}
           <ScrollView className="flex-1 p-4">
+            {/* 動作名稱區塊 */}
+            <View className="bg-white rounded-xl px-4 py-3 mb-3 flex-row items-center justify-between">
+              <Text className="text-xl font-bold text-gray-800">{currentExercise?.name}</Text>
+              <TouchableOpacity onPress={() => setShowExercisePicker(true)} className="p-2">
+                <Icon name="swap" size={24} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+
             {/* 最近紀錄 */}
             <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
 
@@ -399,6 +443,18 @@ export default function MenuWorkoutScreen() {
               onNotesChange={setNotes}
             />
           </ScrollView>
+
+          {/* 動作選擇 Modal - 放在記錄 Modal 內部以支援嵌套 */}
+          <ExercisePickerModal
+            visible={showExercisePicker}
+            onClose={() => setShowExercisePicker(false)}
+            onSelect={handleExerciseSwap}
+            exercises={exercises}
+            exerciseBodyParts={exerciseBodyParts}
+            currentExerciseBodyParts={
+              currentExercise ? getBodyPartsForExercise(currentExercise.id) : []
+            }
+          />
         </View>
       </Modal>
     </View>
