@@ -37,7 +37,8 @@
       "Bash(xcrun xctrace:*)",
       "Bash(xcrun devicectl:*)",
       "Bash(sudo xcode-select:*)",
-      "Bash(xcode-select:*)"
+      "Bash(xcode-select:*)",
+      "Bash(gh pr create:*)"
     ]
   },
   "outputStyle": "Explanatory"
