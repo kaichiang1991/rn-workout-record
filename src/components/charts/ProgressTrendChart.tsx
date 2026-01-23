@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useState } from "react";
-import { LineChart } from "react-native-gifted-charts";
+import Svg, { Path, Circle, Line, Text as SvgText } from "react-native-svg";
 import { useProgressTrend, ProgressDataPoint } from "@/hooks/useProgressTrend";
 
 type MetricType = "maxWeight" | "volume" | "estimated1RM";
@@ -17,6 +17,115 @@ const METRIC_OPTIONS: { key: MetricType; label: string; unit: string }[] = [
   { key: "estimated1RM", label: "估算 1RM", unit: "kg" },
 ];
 
+// 自訂 SVG 折線圖元件
+function SimpleLineChart({
+  data,
+  width,
+  height,
+  color,
+}: {
+  data: { value: number; label: string }[];
+  width: number;
+  height: number;
+  color: string;
+}) {
+  if (data.length === 0) return null;
+
+  const padding = { top: 20, right: 20, bottom: 30, left: 45 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+
+  const values = data.map((d) => d.value);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const valueRange = maxValue - minValue || 1;
+
+  // 計算點的位置
+  const points = data.map((d, i) => ({
+    x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
+    y: padding.top + chartHeight - ((d.value - minValue) / valueRange) * chartHeight,
+    value: d.value,
+    label: d.label,
+  }));
+
+  // 建立路徑
+  const pathD = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(" ");
+
+  // 建立填充區域路徑
+  const areaD = `${pathD} L ${points[points.length - 1].x} ${padding.top + chartHeight} L ${points[0].x} ${padding.top + chartHeight} Z`;
+
+  // Y 軸刻度
+  const yTicks = 4;
+  const yTickValues = Array.from({ length: yTicks + 1 }, (_, i) =>
+    Math.round(minValue + (valueRange / yTicks) * i)
+  );
+
+  return (
+    <Svg width={width} height={height}>
+      {/* Y 軸刻度線 */}
+      {yTickValues.map((tick, i) => {
+        const y = padding.top + chartHeight - ((tick - minValue) / valueRange) * chartHeight;
+        return (
+          <Line
+            key={`grid-${i}`}
+            x1={padding.left}
+            y1={y}
+            x2={width - padding.right}
+            y2={y}
+            stroke="#e5e7eb"
+            strokeWidth={1}
+          />
+        );
+      })}
+
+      {/* Y 軸標籤 */}
+      {yTickValues.map((tick, i) => {
+        const y = padding.top + chartHeight - ((tick - minValue) / valueRange) * chartHeight;
+        return (
+          <SvgText
+            key={`ytick-${i}`}
+            x={padding.left - 8}
+            y={y + 4}
+            fontSize={10}
+            fill="#6b7280"
+            textAnchor="end"
+          >
+            {tick}
+          </SvgText>
+        );
+      })}
+
+      {/* 填充區域 */}
+      <Path d={areaD} fill="rgba(59, 130, 246, 0.15)" />
+
+      {/* 折線 */}
+      <Path d={pathD} stroke={color} strokeWidth={2} fill="none" />
+
+      {/* 資料點 */}
+      {points.map((p, i) => (
+        <Circle key={`point-${i}`} cx={p.x} cy={p.y} r={4} fill={color} />
+      ))}
+
+      {/* X 軸標籤（只顯示第一個和最後一個） */}
+      {points.map((p, i) => {
+        if (i !== 0 && i !== points.length - 1) return null;
+        return (
+          <SvgText
+            key={`xlabel-${i}`}
+            x={p.x}
+            y={height - 8}
+            fontSize={10}
+            fill="#6b7280"
+            textAnchor="middle"
+          >
+            {p.label}
+          </SvgText>
+        );
+      })}
+    </Svg>
+  );
+}
+
 export function ProgressTrendChart({ exerciseId, startDate, endDate }: ProgressTrendChartProps) {
   const [metric, setMetric] = useState<MetricType>("maxWeight");
   const { data, isLoading, error } = useProgressTrend({
@@ -29,7 +138,6 @@ export function ProgressTrendChart({ exerciseId, startDate, endDate }: ProgressT
     return rawData.map((point, index) => ({
       value: point[selectedMetric],
       label: index === 0 || index === rawData.length - 1 ? point.date.slice(5) : "",
-      dataPointText: point[selectedMetric].toString(),
     }));
   };
 
@@ -68,46 +176,33 @@ export function ProgressTrendChart({ exerciseId, startDate, endDate }: ProgressT
         <Text className="text-lg font-bold text-gray-800">進步趨勢</Text>
         <View className="flex-row bg-gray-100 rounded-lg p-1">
           {METRIC_OPTIONS.map((option) => (
-            <TouchableOpacity
+            <Pressable
               key={option.key}
-              className={`px-3 py-1.5 rounded-md ${
-                metric === option.key ? "bg-white shadow-sm" : ""
-              }`}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 6,
+                backgroundColor: metric === option.key ? "#fff" : "transparent",
+              }}
               onPress={() => setMetric(option.key)}
             >
               <Text
-                className={`text-sm ${
-                  metric === option.key ? "text-primary-600 font-medium" : "text-gray-600"
-                }`}
+                style={{
+                  fontSize: 14,
+                  color: metric === option.key ? "#2563eb" : "#4b5563",
+                  fontWeight: metric === option.key ? "500" : "400",
+                }}
               >
                 {option.label}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
       </View>
 
       {/* 圖表 */}
       <View className="items-center">
-        <LineChart
-          data={chartData}
-          width={280}
-          height={200}
-          spacing={data.length > 10 ? 25 : 40}
-          color="#3b82f6"
-          thickness={2}
-          dataPointsColor="#3b82f6"
-          dataPointsRadius={4}
-          startFillColor="rgba(59, 130, 246, 0.2)"
-          endFillColor="rgba(59, 130, 246, 0.01)"
-          areaChart
-          curved
-          yAxisTextStyle={{ color: "#6b7280", fontSize: 10 }}
-          xAxisLabelTextStyle={{ color: "#6b7280", fontSize: 10 }}
-          hideRules
-          yAxisColor="transparent"
-          xAxisColor="#e5e7eb"
-        />
+        <SimpleLineChart data={chartData} width={300} height={200} color="#3b82f6" />
       </View>
 
       {/* 統計摘要 */}

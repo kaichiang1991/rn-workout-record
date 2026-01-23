@@ -47,7 +47,7 @@ export default function RootLayout() {
             name="exercise/new"
             options={{ title: "新增健身項目", presentation: "modal" }}
           />
-          <Stack.Screen name="exercise/[id]" options={{ title: "編輯健身項目" }} />
+          <Stack.Screen name="exercise/[id]" options={{ headerShown: false }} />
           <Stack.Screen
             name="menu/new"
             options={{ title: "新增訓練菜單", presentation: "modal" }}

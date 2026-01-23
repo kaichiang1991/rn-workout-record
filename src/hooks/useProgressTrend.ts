@@ -39,13 +39,22 @@ export function useProgressTrend({
     try {
       const db = await getDatabase();
 
-      // 查詢指定日期範圍內的 sessions
+      // 先查詢該 exerciseId 的所有 sessions（不限日期）來 debug
+      const allSessions = await db.getAllAsync<WorkoutSession>(
+        `SELECT * FROM workout_sessions WHERE exerciseId = ? ORDER BY date DESC LIMIT 5`,
+        [exerciseId]
+      );
+      console.log("[useProgressTrend] All sessions for exercise:", exerciseId, allSessions);
+
+      // 查詢指定日期範圍內的 sessions（使用 DATE() 函數處理 ISO 格式）
+      console.log("[useProgressTrend] Query params:", { exerciseId, startDate, endDate });
       const sessions = await db.getAllAsync<WorkoutSession>(
         `SELECT * FROM workout_sessions
-         WHERE exerciseId = ? AND date >= ? AND date <= ?
+         WHERE exerciseId = ? AND DATE(date) >= ? AND DATE(date) <= ?
          ORDER BY date ASC`,
         [exerciseId, startDate, endDate]
       );
+      console.log("[useProgressTrend] Found sessions in range:", sessions.length, sessions);
 
       const dataPoints: ProgressDataPoint[] = [];
 

@@ -104,14 +104,23 @@ export default function EditExerciseScreen() {
       <Stack.Screen
         options={{
           title: name || "編輯項目",
-          headerRight: () => (
-            <TouchableOpacity
-              className="mr-2 p-2"
-              onPress={() => router.push(`/exercise/${id}/chart`)}
-            >
-              <Icon name="chart" size={24} color="#3b82f6" />
-            </TouchableOpacity>
-          ),
+          headerRight: () => {
+            console.log("[EditExercise] Rendering chart button, id:", id);
+            return (
+              <TouchableOpacity
+                className="mr-2 p-2"
+                onPress={() => {
+                  console.log(
+                    "[EditExercise] Chart button pressed, navigating to:",
+                    `/exercise/${id}/chart`
+                  );
+                  router.push(`/exercise/${id}/chart`);
+                }}
+              >
+                <Icon name="chart" size={24} color="#fff" />
+              </TouchableOpacity>
+            );
+          },
         }}
       />
       <ScrollView className="flex-1 bg-gray-50">
