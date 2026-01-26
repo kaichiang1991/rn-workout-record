@@ -9,6 +9,7 @@ import { WorkoutRecordForm } from "@/components/WorkoutRecordForm";
 import { RecentRecordsList } from "@/components/RecentRecordsList";
 import { ExercisePickerModal } from "@/components/ExercisePickerModal";
 import { Icon } from "@/components/Icon";
+import { TrackingMode, formatSessionSummary } from "@/utils/tracking";
 import { WorkoutSession, Exercise } from "@/db/client";
 
 export default function MenuWorkoutScreen() {
@@ -45,9 +46,11 @@ export default function MenuWorkoutScreen() {
   >({});
 
   // 表單狀態
+  const [trackingMode, setTrackingMode] = useState<TrackingMode>("reps");
   const [isBodyweight, setIsBodyweight] = useState(false);
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
+  const [duration, setDuration] = useState("");
   const [setCount, setSetCount] = useState(0);
   const [difficulty, setDifficulty] = useState(3);
   const [notes, setNotes] = useState("");
@@ -113,9 +116,11 @@ export default function MenuWorkoutScreen() {
     const records = await getRecentByExerciseId(exerciseToUse.id, 3);
     setRecentRecords(records);
     // 重置表單（不自動帶入預設值）
+    setTrackingMode("reps");
     setIsBodyweight(false);
     setWeight("");
     setReps("");
+    setDuration("");
     setSetCount(0);
     setDifficulty(3);
     setNotes("");
@@ -128,9 +133,11 @@ export default function MenuWorkoutScreen() {
     const records = await getRecentByExerciseId(exercise.id, 3);
     setRecentRecords(records);
     // 重置表單
+    setTrackingMode("reps");
     setIsBodyweight(false);
     setWeight("");
     setReps("");
+    setDuration("");
     setSetCount(0);
   };
 
@@ -154,14 +161,21 @@ export default function MenuWorkoutScreen() {
       return;
     }
 
-    if (!isBodyweight && (!weight || parseFloat(weight) <= 0)) {
-      Alert.alert("提示", "請輸入重量");
-      return;
-    }
+    if (trackingMode === "reps") {
+      if (!isBodyweight && (!weight || parseFloat(weight) <= 0)) {
+        Alert.alert("提示", "請輸入重量");
+        return;
+      }
 
-    if (!reps || parseInt(reps, 10) <= 0) {
-      Alert.alert("提示", "請輸入次數");
-      return;
+      if (!reps || parseInt(reps, 10) <= 0) {
+        Alert.alert("提示", "請輸入次數");
+        return;
+      }
+    } else {
+      if (!duration || parseInt(duration, 10) <= 0) {
+        Alert.alert("提示", "請輸入時間");
+        return;
+      }
     }
 
     setSaving(true);
@@ -169,12 +183,13 @@ export default function MenuWorkoutScreen() {
       const session = await createSession({
         exerciseId: currentExercise.id,
         date: new Date().toISOString(),
-        weight: isBodyweight ? null : parseFloat(weight),
-        reps: parseInt(reps, 10),
+        weight: trackingMode === "reps" && !isBodyweight ? parseFloat(weight) : null,
+        reps: trackingMode === "reps" ? parseInt(reps, 10) : null,
         setCount,
         difficulty,
-        isBodyweight,
+        isBodyweight: trackingMode === "reps" && isBodyweight,
         notes: notes.trim() || null,
+        duration: trackingMode === "time" ? parseInt(duration, 10) : null,
       });
       // 使用原本菜單項目的 exerciseId 來標記完成
       await recordExercise(selectedExercise.exerciseId, session.id);
@@ -250,17 +265,7 @@ export default function MenuWorkoutScreen() {
   };
 
   const formatSessionRecord = (session: WorkoutSession): string => {
-    const parts: string[] = [];
-    if (!session.isBodyweight && session.weight) {
-      parts.push(`${session.weight}kg`);
-    }
-    if (session.reps) {
-      parts.push(`${session.reps}下`);
-    }
-    if (session.setCount) {
-      parts.push(`${session.setCount}組`);
-    }
-    return parts.join(" × ");
+    return formatSessionSummary(session);
   };
 
   if (!menu) {
@@ -429,6 +434,10 @@ export default function MenuWorkoutScreen() {
             <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
 
             <WorkoutRecordForm
+              trackingMode={trackingMode}
+              onTrackingModeChange={setTrackingMode}
+              duration={duration}
+              onDurationChange={setDuration}
               isBodyweight={isBodyweight}
               onIsBodyweightChange={setIsBodyweight}
               weight={weight}
