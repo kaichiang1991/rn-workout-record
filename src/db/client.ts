@@ -84,6 +84,16 @@ export async function initDatabase(): Promise<void> {
     );
   `);
 
+  // 遷移：新增 duration 欄位（時間型訓練記錄）
+  const tableInfo = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(workout_sessions)"
+  );
+  const hasDuration = tableInfo.some((col) => col.name === "duration");
+
+  if (!hasDuration) {
+    await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN duration INTEGER");
+  }
+
   // 檢查是否需要加入預設資料
   const result = await database.getFirstAsync<{ count: number }>(
     "SELECT COUNT(*) as count FROM exercises"
