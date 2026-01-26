@@ -341,19 +341,39 @@ export default function MenuDetailScreen() {
         )}
       </View>
 
-      {/* Footer: 完成和刪除按鈕 */}
+      {/* Footer: 刪除、設定目標、完成按鈕 */}
       <View className="bg-white border-t border-gray-200 p-4 flex-row gap-3">
         <TouchableOpacity
-          className="flex-1 bg-gray-200 rounded-xl p-4 items-center"
+          className="bg-gray-200 rounded-xl p-4 items-center"
+          style={{ flex: 0.3 }}
           onPress={handleDelete}
         >
-          <Text className="text-gray-700 text-lg font-semibold">刪除菜單</Text>
+          <Text className="text-gray-700 font-semibold">刪除</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
-          className="flex-1 bg-primary-500 rounded-xl p-4 items-center"
+          className={`rounded-xl p-4 items-center ${
+            menuItems.length === 0 ? "bg-gray-100" : "bg-primary-100"
+          }`}
+          style={{ flex: 0.4 }}
+          onPress={() => router.push(`/menu/${menuId}/goals`)}
+          disabled={menuItems.length === 0}
+        >
+          <Text
+            className={`font-semibold ${
+              menuItems.length === 0 ? "text-gray-400" : "text-primary-600"
+            }`}
+          >
+            設定目標
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="bg-primary-500 rounded-xl p-4 items-center"
+          style={{ flex: 0.3 }}
           onPress={() => router.back()}
         >
-          <Text className="text-white text-lg font-semibold">完成</Text>
+          <Text className="text-white font-semibold">完成</Text>
         </TouchableOpacity>
       </View>
     </View>

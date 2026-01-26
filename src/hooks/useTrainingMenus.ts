@@ -101,6 +101,7 @@ export function useTrainingMenus() {
     const results = await db.getAllAsync<MenuItemWithExercise>(
       `SELECT
         tmi.id, tmi.menuId, tmi.exerciseId, tmi.sortOrder,
+        tmi.targetSets, tmi.targetReps, tmi.targetDuration, tmi.targetText,
         e.name as exerciseName
        FROM training_menu_items tmi
        JOIN exercises e ON tmi.exerciseId = e.id
@@ -110,6 +111,33 @@ export function useTrainingMenus() {
     );
     return results;
   }, []);
+
+  const updateMenuItemGoal = useCallback(
+    async (
+      itemId: number,
+      goal: {
+        targetSets?: number | null;
+        targetReps?: number | null;
+        targetDuration?: number | null;
+        targetText?: string | null;
+      }
+    ): Promise<void> => {
+      const db = await getDatabase();
+      await db.runAsync(
+        `UPDATE training_menu_items
+         SET targetSets = ?, targetReps = ?, targetDuration = ?, targetText = ?
+         WHERE id = ?`,
+        [
+          goal.targetSets ?? null,
+          goal.targetReps ?? null,
+          goal.targetDuration ?? null,
+          goal.targetText ?? null,
+          itemId,
+        ]
+      );
+    },
+    []
+  );
 
   const addMenuItem = useCallback(
     async (menuId: number, exerciseId: number): Promise<TrainingMenuItem> => {
@@ -132,6 +160,10 @@ export function useTrainingMenus() {
         menuId,
         exerciseId,
         sortOrder: nextOrder,
+        targetSets: null,
+        targetReps: null,
+        targetDuration: null,
+        targetText: null,
       };
     },
     []
@@ -176,6 +208,7 @@ export function useTrainingMenus() {
     addMenuItem,
     removeMenuItem,
     updateMenuItemsOrder,
+    updateMenuItemGoal,
     getMenuItemCount,
   };
 }

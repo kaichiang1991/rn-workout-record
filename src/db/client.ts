@@ -94,6 +94,19 @@ export async function initDatabase(): Promise<void> {
     await database.execAsync("ALTER TABLE workout_sessions ADD COLUMN duration INTEGER");
   }
 
+  // 遷移：新增目標欄位到 training_menu_items
+  const menuItemsInfo = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(training_menu_items)"
+  );
+  const hasTargetSets = menuItemsInfo.some((col) => col.name === "targetSets");
+
+  if (!hasTargetSets) {
+    await database.execAsync("ALTER TABLE training_menu_items ADD COLUMN targetSets INTEGER");
+    await database.execAsync("ALTER TABLE training_menu_items ADD COLUMN targetReps INTEGER");
+    await database.execAsync("ALTER TABLE training_menu_items ADD COLUMN targetDuration INTEGER");
+    await database.execAsync("ALTER TABLE training_menu_items ADD COLUMN targetText TEXT");
+  }
+
   // 檢查是否需要加入預設資料
   const result = await database.getFirstAsync<{ count: number }>(
     "SELECT COUNT(*) as count FROM exercises"
@@ -208,4 +221,8 @@ export interface TrainingMenuItem {
   menuId: number;
   exerciseId: number;
   sortOrder: number;
+  targetSets: number | null;
+  targetReps: number | null;
+  targetDuration: number | null;
+  targetText: string | null;
 }

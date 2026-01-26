@@ -10,6 +10,7 @@ import { RecentRecordsList } from "@/components/RecentRecordsList";
 import { ExercisePickerModal } from "@/components/ExercisePickerModal";
 import { Icon } from "@/components/Icon";
 import { TrackingMode, formatSessionSummary } from "@/utils/tracking";
+import { formatExerciseWithGoal } from "@/utils/goals";
 import { WorkoutSession, Exercise } from "@/db/client";
 
 export default function MenuWorkoutScreen() {
@@ -403,28 +404,39 @@ export default function MenuWorkoutScreen() {
         onRequestClose={() => setShowRecordModal(false)}
       >
         <View className="flex-1 bg-gray-50">
-          {/* Modal Header - 顯示菜單名稱 */}
-          <View className="bg-white border-b border-gray-200 px-4 pt-4 pb-3 flex-row items-center justify-between">
-            <TouchableOpacity onPress={() => setShowRecordModal(false)}>
-              <Text className="text-gray-600 text-base">取消</Text>
-            </TouchableOpacity>
-            <Text className="text-lg font-bold text-gray-800">{menu?.name}</Text>
-            <TouchableOpacity onPress={handleSaveRecord} disabled={saving}>
-              <Text
-                className={`text-base font-semibold ${
-                  saving ? "text-gray-400" : "text-primary-500"
-                }`}
-              >
-                {saving ? "儲存中..." : "儲存"}
-              </Text>
-            </TouchableOpacity>
+          {/* Modal Header - 顯示菜單名稱與描述 */}
+          <View className="bg-white border-b border-gray-200 px-4 pt-4 pb-3">
+            <View className="flex-row items-center justify-between">
+              <TouchableOpacity onPress={() => setShowRecordModal(false)}>
+                <Text className="text-gray-600 text-base">取消</Text>
+              </TouchableOpacity>
+              <View className="items-center flex-1 mx-4">
+                <Text className="text-lg font-bold text-gray-800">{menu?.name}</Text>
+                {menu?.description && (
+                  <Text className="text-sm text-gray-500 mt-1">{menu.description}</Text>
+                )}
+              </View>
+              <TouchableOpacity onPress={handleSaveRecord} disabled={saving}>
+                <Text
+                  className={`text-base font-semibold ${
+                    saving ? "text-gray-400" : "text-primary-500"
+                  }`}
+                >
+                  {saving ? "儲存中..." : "儲存"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* 表單 */}
           <ScrollView className="flex-1 p-4">
-            {/* 動作名稱區塊 */}
+            {/* 動作名稱區塊（含目標） */}
             <View className="bg-white rounded-xl px-4 py-3 mb-3 flex-row items-center justify-between">
-              <Text className="text-xl font-bold text-gray-800">{currentExercise?.name}</Text>
+              <Text className="text-xl font-bold text-gray-800">
+                {selectedExercise && currentExercise
+                  ? formatExerciseWithGoal(currentExercise.name, selectedExercise)
+                  : currentExercise?.name}
+              </Text>
               <TouchableOpacity onPress={() => setShowExercisePicker(true)} className="p-2">
                 <Icon name="swap" size={24} color="#6b7280" />
               </TouchableOpacity>
