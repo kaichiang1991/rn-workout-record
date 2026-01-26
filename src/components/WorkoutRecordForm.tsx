@@ -1,8 +1,14 @@
 import { View, Text, TextInput, Switch } from "react-native";
 import { SetCounter } from "./SetCounter";
 import { DifficultySelector } from "./DifficultySelector";
+import { TrackingModeSwitch } from "./TrackingModeSwitch";
+import { TrackingMode } from "../utils/tracking";
 
 interface WorkoutRecordFormProps {
+  trackingMode: TrackingMode;
+  onTrackingModeChange: (mode: TrackingMode) => void;
+  duration: string;
+  onDurationChange: (value: string) => void;
   isBodyweight: boolean;
   onIsBodyweightChange: (value: boolean) => void;
   weight: string;
@@ -18,6 +24,10 @@ interface WorkoutRecordFormProps {
 }
 
 export function WorkoutRecordForm({
+  trackingMode,
+  onTrackingModeChange,
+  duration,
+  onDurationChange,
   isBodyweight,
   onIsBodyweightChange,
   weight,
@@ -33,45 +43,73 @@ export function WorkoutRecordForm({
 }: WorkoutRecordFormProps) {
   return (
     <View>
-      {/* 自體重量開關 */}
-      <View className="bg-white rounded-xl px-4 py-3 mb-3 flex-row items-center justify-between">
-        <Text className="text-gray-700">自體重量</Text>
-        <Switch value={isBodyweight} onValueChange={onIsBodyweightChange} />
+      {/* 記錄類型切換 */}
+      <View className="mb-4">
+        <Text className="text-base font-bold text-gray-700 mb-2">記錄類型</Text>
+        <TrackingModeSwitch value={trackingMode} onChange={onTrackingModeChange} />
       </View>
 
-      {/* 重量與次數 - 同一列 */}
-      <View className="flex-row mb-4">
-        {/* 重量 */}
-        <View className="flex-1 mr-2">
-          <Text className="text-base font-bold text-gray-700 mb-2">重量</Text>
-          <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
-            <TextInput
-              className="flex-1 text-lg"
-              placeholder="0"
-              keyboardType="decimal-pad"
-              value={isBodyweight ? "" : weight}
-              onChangeText={onWeightChange}
-              editable={!isBodyweight}
-            />
-            <Text className="text-gray-600 text-base ml-2">kg</Text>
+      {/* 次數模式：自體重量開關、重量、次數 */}
+      {trackingMode === "reps" && (
+        <>
+          {/* 自體重量開關 */}
+          <View className="bg-white rounded-xl px-4 py-3 mb-3 flex-row items-center justify-between">
+            <Text className="text-gray-700">自體重量</Text>
+            <Switch value={isBodyweight} onValueChange={onIsBodyweightChange} />
           </View>
-        </View>
 
-        {/* 次數 */}
-        <View className="flex-1 ml-2">
-          <Text className="text-base font-bold text-gray-700 mb-2">每組次數</Text>
+          {/* 重量與次數 - 同一列 */}
+          <View className="flex-row mb-4">
+            {/* 重量 */}
+            <View className="flex-1 mr-2">
+              <Text className="text-base font-bold text-gray-700 mb-2">重量</Text>
+              <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
+                <TextInput
+                  className="flex-1 text-lg"
+                  placeholder="0"
+                  keyboardType="decimal-pad"
+                  value={isBodyweight ? "" : weight}
+                  onChangeText={onWeightChange}
+                  editable={!isBodyweight}
+                />
+                <Text className="text-gray-600 text-base ml-2">kg</Text>
+              </View>
+            </View>
+
+            {/* 次數 */}
+            <View className="flex-1 ml-2">
+              <Text className="text-base font-bold text-gray-700 mb-2">每組次數</Text>
+              <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
+                <TextInput
+                  className="flex-1 text-lg"
+                  placeholder="0"
+                  keyboardType="number-pad"
+                  value={reps}
+                  onChangeText={onRepsChange}
+                />
+                <Text className="text-gray-600 text-base ml-2">下</Text>
+              </View>
+            </View>
+          </View>
+        </>
+      )}
+
+      {/* 時間模式：時間輸入 */}
+      {trackingMode === "time" && (
+        <View className="mb-4">
+          <Text className="text-base font-bold text-gray-700 mb-2">每組時間</Text>
           <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
             <TextInput
               className="flex-1 text-lg"
               placeholder="0"
               keyboardType="number-pad"
-              value={reps}
-              onChangeText={onRepsChange}
+              value={duration}
+              onChangeText={onDurationChange}
             />
-            <Text className="text-gray-600 text-base ml-2">下</Text>
+            <Text className="text-gray-600 text-base ml-2">秒</Text>
           </View>
         </View>
-      </View>
+      )}
 
       {/* 難易度選擇 */}
       <View className="mb-4">
