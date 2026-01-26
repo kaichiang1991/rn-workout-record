@@ -1,32 +1,12 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { WorkoutSession } from "@/db/client";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
+import { formatSessionSummary } from "@/utils/tracking";
 
 interface RecentRecordsListProps {
   records: WorkoutSession[];
   onSelect: (record: WorkoutSession) => void;
 }
-
-const formatRecord = (record: WorkoutSession): string => {
-  const parts: string[] = [];
-
-  // 重量（自體重量則省略）
-  if (!record.isBodyweight && record.weight) {
-    parts.push(`${record.weight}kg`);
-  }
-
-  // 次數
-  if (record.reps) {
-    parts.push(`${record.reps}下`);
-  }
-
-  // 組數
-  if (record.setCount) {
-    parts.push(`${record.setCount}組`);
-  }
-
-  return parts.join(" × ");
-};
 
 const getDifficultyColor = (difficulty: number | null): string => {
   if (!difficulty) return "#9ca3af";
@@ -49,7 +29,7 @@ export function RecentRecordsList({ records, onSelect }: RecentRecordsListProps)
           onPress={() => onSelect(record)}
           activeOpacity={0.6}
         >
-          <Text className="text-gray-700 text-base">{formatRecord(record)}</Text>
+          <Text className="text-gray-700 text-base">{formatSessionSummary(record)}</Text>
           <View
             className="w-4 h-4 rounded-full"
             style={{ backgroundColor: getDifficultyColor(record.difficulty) }}

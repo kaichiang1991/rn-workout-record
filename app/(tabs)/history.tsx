@@ -6,6 +6,7 @@ import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
 import { Icon } from "@/components/Icon";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
+import { formatSessionSummary } from "@/utils/tracking";
 
 export default function HistoryScreen() {
   const router = useRouter();
@@ -160,6 +161,9 @@ export default function HistoryScreen() {
                     <View className="flex-1">
                       <Text className="text-lg font-semibold text-gray-800">
                         {getExerciseName(session.exerciseId)}
+                      </Text>
+                      <Text className="text-primary-600 text-sm mt-1">
+                        {formatSessionSummary(session)}
                       </Text>
                       <Text className="text-gray-500 text-sm mt-1">{formatDate(session.date)}</Text>
                       {session.notes && (
