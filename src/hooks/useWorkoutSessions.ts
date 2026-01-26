@@ -5,11 +5,12 @@ interface CreateSessionInput {
   exerciseId: number;
   date: string;
   weight: number | null;
-  reps: number;
+  reps: number | null;
   setCount: number;
   difficulty: number;
   isBodyweight: boolean;
   notes: string | null;
+  duration: number | null;
 }
 
 interface UseWorkoutSessionsOptions {
@@ -104,8 +105,8 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
 
     const sessionResult = await db.runAsync(
       `INSERT INTO workout_sessions
-       (exerciseId, date, weight, reps, setCount, difficulty, isBodyweight, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (exerciseId, date, weight, reps, setCount, difficulty, isBodyweight, notes, duration)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.exerciseId,
         input.date,
@@ -115,6 +116,7 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
         input.difficulty,
         input.isBodyweight ? 1 : 0,
         input.notes,
+        input.duration,
       ]
     );
 
@@ -128,6 +130,7 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
       difficulty: input.difficulty,
       isBodyweight: input.isBodyweight ? 1 : 0,
       notes: input.notes,
+      duration: input.duration,
       createdAt: new Date().toISOString(),
     };
 
