@@ -38,7 +38,8 @@
       "Bash(xcrun devicectl:*)",
       "Bash(sudo xcode-select:*)",
       "Bash(xcode-select:*)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "mcp__ide__getDiagnostics"
     ]
   },
   "outputStyle": "Explanatory"

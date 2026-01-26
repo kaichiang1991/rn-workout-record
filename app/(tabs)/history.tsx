@@ -7,6 +7,7 @@ import { useExercises } from "@/hooks/useExercises";
 import { Icon } from "@/components/Icon";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
 import { formatSessionSummary } from "@/utils/tracking";
+import { getMonthKey } from "@/utils/date";
 
 export default function HistoryScreen() {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function HistoryScreen() {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-TW", {
+      timeZone: "Asia/Taipei",
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -59,15 +61,14 @@ export default function HistoryScreen() {
     return exerciseName.includes(query) || notes.includes(query);
   });
 
-  // 按月份分組
+  // 按月份分組（使用 GMT+8 時區）
   const groupedSessions = filteredSessions.reduce(
     (acc, session) => {
-      const date = new Date(session.date);
-      const monthKey = `${date.getFullYear()}年${date.getMonth() + 1}月`;
-      if (!acc[monthKey]) {
-        acc[monthKey] = [];
+      const monthKeyStr = getMonthKey(session.date);
+      if (!acc[monthKeyStr]) {
+        acc[monthKeyStr] = [];
       }
-      acc[monthKey].push(session);
+      acc[monthKeyStr].push(session);
       return acc;
     },
     {} as Record<string, typeof sessions>

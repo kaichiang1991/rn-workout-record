@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getDatabase, WorkoutSession, WorkoutSet } from "@/db/client";
+import { toLocalDateKey, getTodayDateKey } from "@/utils/date";
 
 interface ExerciseProgress {
   date: string;
@@ -64,15 +65,18 @@ export function useStats() {
 
       for (const session of sessions) {
         const sessionDate = new Date(session.date);
-        // 使用 YYYY-MM-DD 格式作為日期的唯一識別
-        const dateKey = session.date.split("T")[0];
+        // 使用 GMT+8 時區的 YYYY-MM-DD 格式作為日期的唯一識別
+        const dateKey = toLocalDateKey(session.date);
         totalDays.add(dateKey);
 
         if (sessionDate >= weekStart) {
           thisWeekDays.add(dateKey);
 
           // 統計每天運動次數（本週）
-          const dayKey = sessionDate.toLocaleDateString("zh-TW", { weekday: "short" });
+          const dayKey = sessionDate.toLocaleDateString("zh-TW", {
+            timeZone: "Asia/Taipei",
+            weekday: "short",
+          });
           dailyCount[dayKey] = (dailyCount[dayKey] || 0) + 1;
         }
 
@@ -95,11 +99,11 @@ export function useStats() {
       }));
 
       // 建立本週每日狀態（週日到週六）
-      const todayStr = now.toISOString().split("T")[0];
+      const todayStr = getTodayDateKey();
       const weeklyStatus: WeekDayStatus[] = days.map((day, index) => {
         const date = new Date(weekStart);
         date.setDate(weekStart.getDate() + index);
-        const dateStr = date.toISOString().split("T")[0];
+        const dateStr = toLocalDateKey(date);
         return {
           day,
           date: dateStr,

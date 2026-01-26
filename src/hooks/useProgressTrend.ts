@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { getDatabase, WorkoutSession, WorkoutSet } from "@/db/client";
+import { toLocalDateKey } from "@/utils/date";
 
 export interface ProgressDataPoint {
   date: string;
@@ -96,7 +97,7 @@ export function useProgressTrend({
         }
 
         dataPoints.push({
-          date: session.date.split("T")[0],
+          date: toLocalDateKey(session.date),
           maxWeight,
           volume: totalVolume,
           estimated1RM: Math.round(bestEstimated1RM * 10) / 10,

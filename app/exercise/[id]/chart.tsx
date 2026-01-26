@@ -4,6 +4,7 @@ import { useState } from "react";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useExercises } from "@/hooks/useExercises";
 import { ProgressTrendChart } from "@/components/charts/ProgressTrendChart";
+import { toLocalDateKey } from "@/utils/date";
 
 export default function ExerciseChartScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,6 +23,7 @@ export default function ExerciseChartScreen() {
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("zh-TW", {
+      timeZone: "Asia/Taipei",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -90,8 +92,8 @@ export default function ExerciseChartScreen() {
           {/* 圖表 */}
           <ProgressTrendChart
             exerciseId={parseInt(id!, 10)}
-            startDate={startDate.toISOString().split("T")[0]}
-            endDate={endDate.toISOString().split("T")[0]}
+            startDate={toLocalDateKey(startDate)}
+            endDate={toLocalDateKey(endDate)}
           />
 
           {/* DateTimePicker modals */}

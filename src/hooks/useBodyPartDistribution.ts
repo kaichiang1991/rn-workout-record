@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getDatabase } from "@/db/client";
 import { BODY_PARTS, BodyPartKey } from "@/utils/constants";
+import { toLocalDateKey } from "@/utils/date";
 
 export interface BodyPartStat {
   bodyPart: BodyPartKey;
@@ -28,10 +29,10 @@ export function useBodyPartDistribution(): UseBodyPartDistributionResult {
     try {
       const db = await getDatabase();
 
-      // 計算 4 週前的日期
+      // 計算 4 週前的日期（使用 GMT+8 時區）
       const fourWeeksAgo = new Date();
       fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
-      const startDate = fourWeeksAgo.toISOString().split("T")[0];
+      const startDate = toLocalDateKey(fourWeeksAgo);
 
       // 查詢近 4 週每個身體部位的訓練天數
       const results = await db.getAllAsync<{ bodyPart: string; trainingDays: number }>(

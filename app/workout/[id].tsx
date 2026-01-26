@@ -69,6 +69,7 @@ export default function WorkoutDetailScreen() {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-TW", {
+      timeZone: "Asia/Taipei",
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -81,6 +82,7 @@ export default function WorkoutDetailScreen() {
   const formatShortDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-TW", {
+      timeZone: "Asia/Taipei",
       month: "short",
       day: "numeric",
       weekday: "short",

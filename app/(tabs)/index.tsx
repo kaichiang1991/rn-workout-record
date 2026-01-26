@@ -9,6 +9,7 @@ import { StatsCard } from "@/components/charts/StatsCard";
 import { BodyPartRadar } from "@/components/charts/BodyPartRadar";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
 import { Icon } from "@/components/Icon";
+import { toLocalDateKey } from "@/utils/date";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -27,6 +28,40 @@ export default function HomeScreen() {
       refreshSessions();
       refreshStats();
     }, [refreshSessions, refreshStats])
+  );
+
+  // Debug: 印出前五筆資料的完整記錄
+  useFocusEffect(
+    useCallback(() => {
+      if (sessions.length > 0) {
+        console.log("=== 前五筆訓練記錄（GMT+8 時區檢查）===");
+        sessions.slice(0, 5).forEach((session, index) => {
+          const utcDate = new Date(session.date);
+          const localDateStr = utcDate.toLocaleString("zh-TW", {
+            timeZone: "Asia/Taipei",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+          const localDateKey = toLocalDateKey(session.date);
+          console.log(`[${index + 1}] ID: ${session.id}`);
+          console.log(`    運動項目 ID: ${session.exerciseId}`);
+          console.log(`    原始日期: ${session.date}`);
+          console.log(`    GMT+8 日期: ${localDateStr}`);
+          console.log(`    分類日期 Key: ${localDateKey}`);
+          console.log(
+            `    重量: ${session.weight}kg, 次數: ${session.reps}, 組數: ${session.setCount}`
+          );
+          console.log(`    時間記錄: ${session.duration}秒`);
+          console.log(`    難易度: ${session.difficulty}, 自重: ${session.isBodyweight}`);
+          console.log(`    備註: ${session.notes}`);
+          console.log("---");
+        });
+      }
+    }, [sessions])
   );
 
   const onRefresh = useCallback(async () => {
@@ -58,6 +93,7 @@ export default function HomeScreen() {
   const formatDateHeader = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-TW", {
+      timeZone: "Asia/Taipei",
       month: "long",
       day: "numeric",
     });
@@ -66,8 +102,8 @@ export default function HomeScreen() {
   const groupSessionsByDate = () => {
     const grouped: Record<string, typeof sessions> = {};
     sessions.forEach((session) => {
-      // 標準化日期格式，只取 YYYY-MM-DD 部分
-      const dateKey = session.date.split("T")[0];
+      // 使用 GMT+8 時區的日期作為分類 key
+      const dateKey = toLocalDateKey(session.date);
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
