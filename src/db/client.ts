@@ -175,6 +175,7 @@ export interface WorkoutSession {
   isBodyweight: number; // SQLite 使用 0/1
   notes: string | null;
   createdAt: string;
+  duration: number | null; // 新增：時間（秒）
 }
 
 export interface ExerciseBodyPart {
