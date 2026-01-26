@@ -5,6 +5,7 @@ import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
 import { WorkoutSession } from "@/db/client";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
+import { getTrackingMode, formatDuration, formatSessionSummary } from "@/utils/tracking";
 
 export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -106,8 +107,9 @@ export default function WorkoutDetailScreen() {
   }
 
   const difficultyInfo = getDifficultyInfo(session.difficulty);
+  const trackingMode = getTrackingMode(session);
   const totalVolume =
-    session.setCount && session.reps && session.weight
+    trackingMode === "reps" && session.setCount && session.reps && session.weight
       ? session.setCount * session.reps * session.weight
       : null;
 
@@ -135,18 +137,32 @@ export default function WorkoutDetailScreen() {
 
         {/* 訓練數據 */}
         <View className="flex-row gap-3 mb-4">
-          <View className="flex-1 bg-white rounded-xl p-4">
-            <Text className="text-gray-500 text-sm">重量</Text>
-            <Text className="text-2xl font-bold text-gray-800">
-              {session.isBodyweight ? "自體" : session.weight ? `${session.weight}kg` : "-"}
-            </Text>
-          </View>
-          <View className="flex-1 bg-white rounded-xl p-4">
-            <Text className="text-gray-500 text-sm">次數</Text>
-            <Text className="text-2xl font-bold text-gray-800">
-              {session.reps ? `${session.reps}下` : "-"}
-            </Text>
-          </View>
+          {trackingMode === "time" ? (
+            // 時間型：顯示時間
+            <View className="flex-1 bg-white rounded-xl p-4">
+              <Text className="text-gray-500 text-sm">時間</Text>
+              <Text className="text-2xl font-bold text-gray-800">
+                {formatDuration(session.duration!)}
+              </Text>
+            </View>
+          ) : (
+            // 次數型：顯示重量和次數
+            <>
+              <View className="flex-1 bg-white rounded-xl p-4">
+                <Text className="text-gray-500 text-sm">重量</Text>
+                <Text className="text-2xl font-bold text-gray-800">
+                  {session.isBodyweight ? "自體" : session.weight ? `${session.weight}kg` : "-"}
+                </Text>
+              </View>
+              <View className="flex-1 bg-white rounded-xl p-4">
+                <Text className="text-gray-500 text-sm">次數</Text>
+                <Text className="text-2xl font-bold text-gray-800">
+                  {session.reps ? `${session.reps}下` : "-"}
+                </Text>
+              </View>
+            </>
+          )}
+          {/* 組數（兩種類型都顯示） */}
           <View className="flex-1 bg-white rounded-xl p-4">
             <Text className="text-gray-500 text-sm">組數</Text>
             <Text className="text-2xl font-bold text-gray-800">
@@ -205,9 +221,7 @@ export default function WorkoutDetailScreen() {
                         {formatShortDate(record.date)}
                       </Text>
                       <Text className="text-gray-500 text-sm mt-1">
-                        {record.isBodyweight ? "自體" : record.weight ? `${record.weight}kg` : "-"}{" "}
-                        · {record.reps ? `${record.reps}下` : "-"} ·{" "}
-                        {record.setCount ? `${record.setCount}組` : "-"}
+                        {formatSessionSummary(record)}
                       </Text>
                     </View>
                     <View
