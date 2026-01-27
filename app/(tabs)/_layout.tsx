@@ -1,8 +1,9 @@
-import { Tabs, useRouter, Link } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { View, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, TAB_ICONS } from "../../src/components/Icon";
 import { Feather } from "@expo/vector-icons";
+import { router as expoRouter } from "expo-router";
 
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const iconName = TAB_ICONS[name] || "home";
@@ -33,11 +34,13 @@ function AddRecordButton() {
 
 function HeaderExportButton() {
   return (
-    <Link href="/export" asChild>
-      <TouchableOpacity className="mr-4" activeOpacity={0.7}>
-        <Feather name="share" size={22} color="#fff" />
-      </TouchableOpacity>
-    </Link>
+    <TouchableOpacity
+      className="mr-4"
+      activeOpacity={0.7}
+      onPress={() => expoRouter.push("/export")}
+    >
+      <Feather name="share" size={22} color="#fff" />
+    </TouchableOpacity>
   );
 }
 

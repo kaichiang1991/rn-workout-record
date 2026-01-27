@@ -13,8 +13,6 @@ import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/dat
 import * as Sharing from "expo-sharing";
 import { captureRef } from "react-native-view-shot";
 import { useExportData, ExportData } from "@/hooks/useExportData";
-import { ExportChart } from "@/components/export/ExportChart";
-import { ExportTextPreview, generateExportText } from "@/components/export/ExportTextPreview";
 import { Icon } from "@/components/Icon";
 
 type ExportFormat = "chart" | "text";
@@ -94,13 +92,12 @@ export default function ExportScreen() {
 
   // 當日期變更時重新載入資料
   useEffect(() => {
+    const loadData = async () => {
+      const data = await fetchExportData(startDate, endDate);
+      setExportData(data);
+    };
     loadData();
-  }, [startDate, endDate]);
-
-  const loadData = async () => {
-    const data = await fetchExportData(startDate, endDate);
-    setExportData(data);
-  };
+  }, [fetchExportData, startDate, endDate]);
 
   const handlePresetSelect = (index: number) => {
     setSelectedPreset(index);
@@ -113,8 +110,7 @@ export default function ExportScreen() {
     setShowStartPicker(Platform.OS === "ios");
     if (date) {
       setStartDate(date);
-      setSelectedPreset(-1); // 取消預設選擇
-      // 確保開始日期不大於結束日期
+      setSelectedPreset(-1);
       if (date > endDate) {
         setEndDate(date);
       }
@@ -126,7 +122,6 @@ export default function ExportScreen() {
     if (date) {
       setEndDate(date);
       setSelectedPreset(-1);
-      // 確保結束日期不小於開始日期
       if (date < startDate) {
         setStartDate(date);
       }
@@ -148,14 +143,12 @@ export default function ExportScreen() {
       setSharing(true);
 
       if (format === "chart") {
-        // 截圖分享
         if (chartRef.current) {
           const uri = await captureRef(chartRef, {
             format: "png",
             quality: 1,
           });
 
-          // 檢查是否可以分享
           const isAvailable = await Sharing.isAvailableAsync();
           if (isAvailable) {
             await Sharing.shareAsync(uri);
@@ -164,9 +157,8 @@ export default function ExportScreen() {
           }
         }
       } else {
-        // 文字分享 - 使用 React Native 的 Share API
-        const text = generateExportText(exportData.stats, exportData.dailyDetails);
-
+        // 文字分享
+        const text = generateExportText(exportData);
         await Share.share({
           message: text,
           title: "訓練紀錄",
@@ -178,6 +170,41 @@ export default function ExportScreen() {
     } finally {
       setSharing(false);
     }
+  };
+
+  // 產生匯出文字
+  const generateExportText = (data: ExportData): string => {
+    const { stats, dailyDetails } = data;
+    const formatDate = (dateStr: string) => dateStr.replace(/-/g, "/");
+
+    const lines: string[] = [
+      "📋 訓練紀錄",
+      `${formatDate(stats.startDate)} ~ ${formatDate(stats.endDate)}`,
+      `共訓練 ${stats.totalDays} 天 ｜ 總計 ${stats.totalSets} 組`,
+      "",
+    ];
+
+    for (const day of dailyDetails) {
+      lines.push("────────────────────");
+      lines.push(`📅 ${formatDate(day.date)}（${day.dayOfWeek}）`);
+      lines.push("────────────────────");
+
+      for (const item of day.items) {
+        let line = `• ${item.exerciseName}｜${item.sets}組 × ${item.reps}下`;
+        if (item.weight != null && item.weight > 0) {
+          line += `｜${item.weight}kg`;
+        }
+        lines.push(line);
+
+        if (item.notes) {
+          lines.push(`  └ ${item.notes}`);
+        }
+      }
+
+      lines.push("");
+    }
+
+    return lines.join("\n");
   };
 
   return (
@@ -309,14 +336,78 @@ export default function ExportScreen() {
               </View>
             ) : exportData ? (
               format === "chart" ? (
-                <View className="rounded-xl overflow-hidden shadow-sm">
-                  <ExportChart ref={chartRef} stats={exportData.stats} />
+                <View ref={chartRef} className="bg-white rounded-xl p-4">
+                  {/* 簡化的圖表預覽 */}
+                  <Text className="text-xl font-bold text-gray-800 text-center mb-1">訓練統計</Text>
+                  <Text className="text-gray-500 text-center text-sm mb-2">
+                    {exportData.stats.startDate.replace(/-/g, "/")} ~{" "}
+                    {exportData.stats.endDate.replace(/-/g, "/")}
+                  </Text>
+                  <Text className="text-gray-600 text-center mb-4">
+                    共訓練 {exportData.stats.totalDays} 天 ｜ 總計 {exportData.stats.totalSets} 組
+                  </Text>
+                  <View className="h-px bg-gray-200 mb-4" />
+                  {exportData.stats.exerciseStats.slice(0, 5).map((exercise, index) => {
+                    const maxSets = Math.max(
+                      ...exportData.stats.exerciseStats.map((e) => e.totalSets),
+                      1
+                    );
+                    const barWidth = (exercise.totalSets / maxSets) * 100;
+                    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+                    return (
+                      <View key={exercise.exerciseId} className="mb-3">
+                        <View className="flex-row justify-between mb-1">
+                          <Text className="text-gray-700">{exercise.exerciseName}</Text>
+                          <Text className="text-gray-500 text-sm">
+                            {exercise.totalSets}組 / {exercise.totalReps}下
+                          </Text>
+                        </View>
+                        <View className="h-5 bg-gray-100 rounded-full overflow-hidden">
+                          <View
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${Math.max(barWidth, 5)}%`,
+                              backgroundColor: colors[index % colors.length],
+                            }}
+                          />
+                        </View>
+                      </View>
+                    );
+                  })}
                 </View>
               ) : (
-                <ExportTextPreview
-                  stats={exportData.stats}
-                  dailyDetails={exportData.dailyDetails}
-                />
+                <ScrollView className="bg-white rounded-xl max-h-96">
+                  <View className="p-4">
+                    <Text className="text-lg font-bold text-gray-800">訓練紀錄</Text>
+                    <Text className="text-gray-500 text-sm">
+                      {exportData.stats.startDate.replace(/-/g, "/")} ~{" "}
+                      {exportData.stats.endDate.replace(/-/g, "/")}
+                    </Text>
+                    <Text className="text-gray-600 text-sm mt-1 mb-3">
+                      共訓練 {exportData.stats.totalDays} 天 ｜ 總計 {exportData.stats.totalSets} 組
+                    </Text>
+                    {exportData.dailyDetails.map((day) => (
+                      <View key={day.date} className="mb-4">
+                        <View className="border-t border-gray-200 pt-3 mb-2">
+                          <Text className="text-gray-700 font-medium">
+                            {day.date.replace(/-/g, "/")}（{day.dayOfWeek}）
+                          </Text>
+                        </View>
+                        {day.items.map((item, index) => (
+                          <View key={`${day.date}-${index}`} className="ml-2 mb-1">
+                            <Text className="text-gray-600">
+                              • {item.exerciseName}｜{item.sets}組 × {item.reps}下
+                              {item.weight != null && item.weight > 0 && `｜${item.weight}kg`}
+                            </Text>
+                            {item.notes && (
+                              <Text className="text-gray-400 text-xs ml-3">└ {item.notes}</Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
               )
             ) : (
               <View className="bg-white rounded-xl p-8 items-center">
