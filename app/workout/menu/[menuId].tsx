@@ -10,7 +10,7 @@ import { RecentRecordsList } from "@/components/RecentRecordsList";
 import { ExercisePickerModal } from "@/components/ExercisePickerModal";
 import { Icon } from "@/components/Icon";
 import { TrackingMode, formatSessionSummary } from "@/utils/tracking";
-import { formatExerciseWithGoal } from "@/utils/goals";
+import { formatExerciseWithGoal, formatGoal } from "@/utils/goals";
 import { WorkoutSession, Exercise } from "@/db/client";
 
 export default function MenuWorkoutScreen() {
@@ -57,6 +57,7 @@ export default function MenuWorkoutScreen() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
+  const [showProgressList, setShowProgressList] = useState(false);
 
   const menu = menus.find((m) => m.id === menuId);
 
@@ -426,6 +427,63 @@ export default function MenuWorkoutScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* 可展開的進度清單 */}
+            <TouchableOpacity
+              className="flex-row items-center mt-3 py-2"
+              onPress={() => setShowProgressList(!showProgressList)}
+            >
+              <Icon
+                name={showProgressList ? "chevron-up" : "chevron-down"}
+                size={16}
+                color="#6b7280"
+              />
+              <Text className="text-gray-600 text-sm ml-1">
+                {completedCount}/{menuItems.length} 完成
+              </Text>
+            </TouchableOpacity>
+
+            {/* 展開的項目清單 */}
+            {showProgressList && (
+              <View className="mt-2 border-t border-gray-100 pt-2">
+                {menuItems.map((item) => {
+                  const isCompleted = isExerciseCompleted(item.exerciseId);
+                  const isCurrent = selectedExercise?.exerciseId === item.exerciseId;
+                  const goalText = formatGoal(item);
+                  const displayText = goalText
+                    ? `${item.exerciseName} (${goalText})`
+                    : item.exerciseName;
+
+                  return (
+                    <View key={item.id} className="flex-row items-center py-1.5">
+                      {/* 狀態圖示 */}
+                      {isCompleted ? (
+                        <View className="w-5 h-5 rounded-full bg-green-500 items-center justify-center mr-2">
+                          <Icon name="check" size={12} color="#fff" />
+                        </View>
+                      ) : isCurrent ? (
+                        <View className="w-5 h-5 rounded-full bg-primary-500 mr-2" />
+                      ) : (
+                        <View className="w-5 h-5 rounded-full border-2 border-gray-300 mr-2" />
+                      )}
+
+                      {/* 項目名稱與目標 */}
+                      <Text
+                        className={`flex-1 text-sm ${
+                          isCompleted
+                            ? "text-gray-400"
+                            : isCurrent
+                              ? "text-primary-600 font-medium"
+                              : "text-gray-600"
+                        }`}
+                      >
+                        {displayText}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </View>
 
           {/* 表單 */}
