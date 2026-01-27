@@ -57,6 +57,7 @@ export default function MenuWorkoutScreen() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
+  const [hasSelectedRecentRecord, setHasSelectedRecentRecord] = useState(false);
   const [showProgressList, setShowProgressList] = useState(false);
 
   const menu = menus.find((m) => m.id === menuId);
@@ -126,6 +127,7 @@ export default function MenuWorkoutScreen() {
     setSetCount(0);
     setDifficulty(3);
     setNotes("");
+    setHasSelectedRecentRecord(false);
     setShowRecordModal(true);
   };
 
@@ -153,6 +155,7 @@ export default function MenuWorkoutScreen() {
     }
     setReps(record.reps?.toString() || "");
     setSetCount(0);
+    setHasSelectedRecentRecord(true);
   };
 
   const handleSaveRecord = async () => {
@@ -501,7 +504,9 @@ export default function MenuWorkoutScreen() {
             </View>
 
             {/* 最近紀錄 */}
-            <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
+            {recentRecords.length > 0 && !hasSelectedRecentRecord && (
+              <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
+            )}
 
             <WorkoutRecordForm
               trackingMode={trackingMode}
