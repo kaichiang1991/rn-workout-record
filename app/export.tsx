@@ -144,9 +144,10 @@ export default function ExportScreen() {
 
       if (format === "chart") {
         if (chartRef.current) {
-          const uri = await captureRef(chartRef, {
+          const uri = await captureRef(chartRef.current, {
             format: "png",
             quality: 1,
+            result: "tmpfile",
           });
 
           const isAvailable = await Sharing.isAvailableAsync();
@@ -336,17 +337,49 @@ export default function ExportScreen() {
               </View>
             ) : exportData ? (
               format === "chart" ? (
-                <View ref={chartRef} className="bg-white rounded-xl p-4">
-                  {/* 簡化的圖表預覽 */}
-                  <Text className="text-xl font-bold text-gray-800 text-center mb-1">訓練統計</Text>
-                  <Text className="text-gray-500 text-center text-sm mb-2">
+                <View
+                  ref={chartRef}
+                  collapsable={false}
+                  style={{
+                    backgroundColor: "#ffffff",
+                    borderRadius: 12,
+                    padding: 16,
+                  }}
+                >
+                  {/* 圖表預覽 - 使用 inline style 確保截圖正確 */}
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      fontWeight: "bold",
+                      color: "#1f2937",
+                      textAlign: "center",
+                      marginBottom: 4,
+                    }}
+                  >
+                    訓練統計
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: "#6b7280",
+                      textAlign: "center",
+                      marginBottom: 8,
+                    }}
+                  >
                     {exportData.stats.startDate.replace(/-/g, "/")} ~{" "}
                     {exportData.stats.endDate.replace(/-/g, "/")}
                   </Text>
-                  <Text className="text-gray-600 text-center mb-4">
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: "#4b5563",
+                      textAlign: "center",
+                      marginBottom: 16,
+                    }}
+                  >
                     共訓練 {exportData.stats.totalDays} 天 ｜ 總計 {exportData.stats.totalSets} 組
                   </Text>
-                  <View className="h-px bg-gray-200 mb-4" />
+                  <View style={{ height: 1, backgroundColor: "#e5e7eb", marginBottom: 16 }} />
                   {exportData.stats.exerciseStats.slice(0, 5).map((exercise, index) => {
                     const maxSets = Math.max(
                       ...exportData.stats.exerciseStats.map((e) => e.totalSets),
@@ -355,25 +388,52 @@ export default function ExportScreen() {
                     const barWidth = (exercise.totalSets / maxSets) * 100;
                     const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
                     return (
-                      <View key={exercise.exerciseId} className="mb-3">
-                        <View className="flex-row justify-between mb-1">
-                          <Text className="text-gray-700">{exercise.exerciseName}</Text>
-                          <Text className="text-gray-500 text-sm">
+                      <View key={exercise.exerciseId} style={{ marginBottom: 12 }}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            marginBottom: 4,
+                          }}
+                        >
+                          <Text style={{ color: "#374151" }}>{exercise.exerciseName}</Text>
+                          <Text style={{ color: "#6b7280", fontSize: 14 }}>
                             {exercise.totalSets}組 / {exercise.totalReps}下
                           </Text>
                         </View>
-                        <View className="h-5 bg-gray-100 rounded-full overflow-hidden">
+                        <View
+                          style={{
+                            height: 20,
+                            backgroundColor: "#f3f4f6",
+                            borderRadius: 10,
+                            overflow: "hidden",
+                          }}
+                        >
                           <View
-                            className="h-full rounded-full"
                             style={{
+                              height: "100%",
                               width: `${Math.max(barWidth, 5)}%`,
                               backgroundColor: colors[index % colors.length],
+                              borderRadius: 10,
                             }}
                           />
                         </View>
                       </View>
                     );
                   })}
+                  {/* 底部浮水印 */}
+                  <View
+                    style={{
+                      marginTop: 16,
+                      paddingTop: 12,
+                      borderTopWidth: 1,
+                      borderTopColor: "#f3f4f6",
+                    }}
+                  >
+                    <Text style={{ color: "#9ca3af", fontSize: 12, textAlign: "center" }}>
+                      Workout Record App
+                    </Text>
+                  </View>
                 </View>
               ) : (
                 <ScrollView className="bg-white rounded-xl max-h-96">

@@ -408,18 +408,28 @@ export default function MenuWorkoutScreen() {
         onRequestClose={() => setShowRecordModal(false)}
       >
         <View className="flex-1 bg-gray-50">
-          {/* Modal Header - 顯示菜單名稱與描述 */}
+          {/* Modal Header - 顯示菜單名稱與進度 */}
           <View className="bg-white border-b border-gray-200 px-4 pt-4 pb-3">
             <View className="flex-row items-center justify-between">
               <TouchableOpacity onPress={() => setShowRecordModal(false)}>
                 <Text className="text-gray-600 text-base">取消</Text>
               </TouchableOpacity>
-              <View className="items-center flex-1 mx-4">
+              <TouchableOpacity
+                className="items-center flex-1 mx-4"
+                onPress={() => setShowProgressList(!showProgressList)}
+              >
                 <Text className="text-lg font-bold text-gray-800">{menu?.name}</Text>
-                {menu?.description && (
-                  <Text className="text-sm text-gray-500 mt-1">{menu.description}</Text>
-                )}
-              </View>
+                <View className="flex-row items-center mt-1">
+                  <Icon
+                    name={showProgressList ? "chevron-up" : "chevron-down"}
+                    size={14}
+                    color="#6b7280"
+                  />
+                  <Text className="text-sm text-gray-500 ml-1">
+                    {completedCount}/{menuItems.length} 完成
+                  </Text>
+                </View>
+              </TouchableOpacity>
               <TouchableOpacity onPress={handleSaveRecord} disabled={saving}>
                 <Text
                   className={`text-base font-semibold ${
@@ -431,24 +441,13 @@ export default function MenuWorkoutScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* 可展開的進度清單 */}
-            <TouchableOpacity
-              className="flex-row items-center mt-3 py-2"
-              onPress={() => setShowProgressList(!showProgressList)}
-            >
-              <Icon
-                name={showProgressList ? "chevron-up" : "chevron-down"}
-                size={16}
-                color="#6b7280"
-              />
-              <Text className="text-gray-600 text-sm ml-1">
-                {completedCount}/{menuItems.length} 完成
-              </Text>
-            </TouchableOpacity>
-
             {/* 展開的項目清單 */}
             {showProgressList && (
-              <View className="mt-2 border-t border-gray-100 pt-2">
+              <View className="mt-3 border-t border-gray-100 pt-3">
+                {/* 菜單描述 */}
+                {menu?.description && (
+                  <Text className="text-sm text-gray-500 mb-3">{menu.description}</Text>
+                )}
                 {menuItems.map((item) => {
                   const isCompleted = isExerciseCompleted(item.exerciseId);
                   const isCurrent = selectedExercise?.exerciseId === item.exerciseId;
