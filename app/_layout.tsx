@@ -1,11 +1,21 @@
 import "../global.css";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, TouchableOpacity } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { initDatabase } from "@/db/client";
+
+function BackButton() {
+  const router = useRouter();
+  return (
+    <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 8 }}>
+      <Feather name="arrow-left" size={24} color="#fff" />
+    </TouchableOpacity>
+  );
+}
 
 export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
@@ -35,6 +45,7 @@ export default function RootLayout() {
             headerTitleStyle: {
               fontWeight: "bold",
             },
+            headerLeft: () => <BackButton />,
           }}
         >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

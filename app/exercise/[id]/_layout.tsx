@@ -29,7 +29,17 @@ export default function ExerciseIdLayout() {
           ),
         }}
       />
-      <Stack.Screen name="chart" options={{ title: "進步趨勢" }} />
+      <Stack.Screen
+        name="chart"
+        options={{
+          title: "進步趨勢",
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 8 }}>
+              <Feather name="arrow-left" size={24} color="#fff" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
     </Stack>
   );
 }
