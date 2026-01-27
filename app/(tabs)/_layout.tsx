@@ -2,6 +2,7 @@ import { Tabs, useRouter } from "expo-router";
 import { View, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, TAB_ICONS } from "../../src/components/Icon";
+import { Feather } from "@expo/vector-icons";
 
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const iconName = TAB_ICONS[name] || "home";
@@ -27,6 +28,16 @@ function AddRecordButton() {
         <Icon name="plus" size={32} color="#fff" />
       </TouchableOpacity>
     </View>
+  );
+}
+
+function HeaderExportButton() {
+  const router = useRouter();
+
+  return (
+    <TouchableOpacity className="mr-4" onPress={() => router.push("/export")} activeOpacity={0.7}>
+      <Feather name="share" size={22} color="#fff" />
+    </TouchableOpacity>
   );
 }
 
@@ -60,6 +71,7 @@ export default function TabLayout() {
         options={{
           title: "首頁",
           tabBarIcon: ({ focused }) => <TabIcon name="index" focused={focused} />,
+          headerRight: () => <HeaderExportButton />,
         }}
       />
       <Tabs.Screen

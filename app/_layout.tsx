@@ -55,6 +55,7 @@ export default function RootLayout() {
           <Stack.Screen name="menu/[id]" options={{ title: "編輯菜單" }} />
           <Stack.Screen name="workout/menu/[menuId]" options={{ headerShown: false }} />
           <Stack.Screen name="workout/menu/summary" options={{ headerShown: false }} />
+          <Stack.Screen name="export" options={{ title: "匯出訓練紀錄" }} />
         </Stack>
       </GestureHandlerRootView>
     </SafeAreaProvider>
