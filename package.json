@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "echo \"No test specified\" && exit 0",
     "prepare": "husky",
-    "deploy:dev": "npx expo run:ios --configuration Release --device"
+    "deploy:dev": "./scripts/deploy-ios.sh",
+    "deploy:dev:clean": "cd ios && xcodebuild clean -workspace app.xcworkspace -scheme app && cd .. && ./scripts/deploy-ios.sh"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

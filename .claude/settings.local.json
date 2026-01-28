@@ -39,7 +39,8 @@
       "Bash(sudo xcode-select:*)",
       "Bash(xcode-select:*)",
       "Bash(gh pr create:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(npm run deploy:dev:*)"
     ]
   },
   "outputStyle": "Explanatory"
