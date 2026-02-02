@@ -29,12 +29,13 @@ interface DraggableMenuCardProps {
   itemCount: number;
   progress: MenuProgress | undefined;
   colorRank: string | undefined;
-  onDragStart: (index: number) => void;
-  onDragMove: (index: number, dy: number) => void;
-  onDragEnd: (index: number) => void;
+  onDragStart: (menuId: number, index: number) => void;
+  onDragMove: (menuId: number, dy: number) => void;
+  onDragEnd: () => void;
   onEdit: (menuId: number) => void;
   onStartWorkout: (menuId: number) => void;
-  draggedIndex: number | null;
+  isDragging: boolean;
+  isOtherDragging: boolean;
 }
 
 function DraggableMenuCard({
@@ -48,40 +49,35 @@ function DraggableMenuCard({
   onDragEnd,
   onEdit,
   onStartWorkout,
-  draggedIndex,
+  isDragging,
+  isOtherDragging,
 }: DraggableMenuCardProps) {
   const pan = useRef(new Animated.ValueXY()).current;
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(1)).current;
 
+  const menuIdRef = useRef(menu.id);
   const indexRef = useRef(index);
   const onDragStartRef = useRef(onDragStart);
   const onDragMoveRef = useRef(onDragMove);
   const onDragEndRef = useRef(onDragEnd);
 
   useEffect(() => {
+    menuIdRef.current = menu.id;
     indexRef.current = index;
     onDragStartRef.current = onDragStart;
     onDragMoveRef.current = onDragMove;
     onDragEndRef.current = onDragEnd;
-  }, [index, onDragStart, onDragMove, onDragEnd]);
+  }, [menu.id, index, onDragStart, onDragMove, onDragEnd]);
 
   // 當其他卡片被拖曳時降低透明度
   useEffect(() => {
-    if (draggedIndex !== null && draggedIndex !== index) {
-      Animated.timing(opacity, {
-        toValue: 0.6,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [draggedIndex, index, opacity]);
+    Animated.timing(opacity, {
+      toValue: isOtherDragging ? 0.6 : 1,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  }, [isOtherDragging, opacity]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -94,7 +90,7 @@ function DraggableMenuCard({
       },
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
-        onDragStartRef.current(indexRef.current);
+        onDragStartRef.current(menuIdRef.current, indexRef.current);
         Animated.spring(scale, {
           toValue: 1.03,
           useNativeDriver: true,
@@ -102,7 +98,7 @@ function DraggableMenuCard({
       },
       onPanResponderMove: (_, gestureState) => {
         pan.setValue({ x: 0, y: gestureState.dy });
-        onDragMoveRef.current(indexRef.current, gestureState.dy);
+        onDragMoveRef.current(menuIdRef.current, gestureState.dy);
       },
       onPanResponderRelease: () => {
         Animated.spring(scale, {
@@ -110,7 +106,7 @@ function DraggableMenuCard({
           useNativeDriver: true,
         }).start();
 
-        onDragEndRef.current(indexRef.current);
+        onDragEndRef.current();
 
         Animated.spring(pan, {
           toValue: { x: 0, y: 0 },
@@ -127,7 +123,7 @@ function DraggableMenuCard({
       style={{
         transform: [{ translateX: pan.x }, { translateY: pan.y }, { scale }],
         opacity,
-        zIndex: draggedIndex === index ? 999 : 1,
+        zIndex: isDragging ? 999 : 1,
       }}
       {...panResponder.panHandlers}
     >
@@ -190,7 +186,8 @@ export default function MenusScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [menuCounts, setMenuCounts] = useState<Record<number, number>>({});
   const [menuProgress, setMenuProgress] = useState<Record<number, MenuProgress>>({});
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [draggedMenuId, setDraggedMenuId] = useState<number | null>(null);
+  const [dragStartIndex, setDragStartIndex] = useState<number | null>(null);
   const [localMenus, setLocalMenus] = useState<TrainingMenu[]>(menus);
 
   // 同步 menus 到 localMenus
@@ -255,32 +252,39 @@ export default function MenusScreen() {
   };
 
   // 拖曳開始
-  const handleDragStart = useCallback((index: number) => {
-    setDraggedIndex(index);
+  const handleDragStart = useCallback((menuId: number, index: number) => {
+    setDraggedMenuId(menuId);
+    setDragStartIndex(index);
   }, []);
 
   // 拖曳移動
   const handleDragMove = useCallback(
-    (index: number, dy: number) => {
-      const targetIndex = Math.round(dy / MENU_CARD_HEIGHT);
-      const newIndex = Math.max(0, Math.min(localMenus.length - 1, index + targetIndex));
+    (menuId: number, dy: number) => {
+      if (draggedMenuId !== menuId || dragStartIndex === null) return;
 
-      if (newIndex !== index && draggedIndex === index) {
+      // 從拖曳開始位置計算目標位置
+      const offset = Math.round(dy / MENU_CARD_HEIGHT);
+      const targetIndex = Math.max(0, Math.min(localMenus.length - 1, dragStartIndex + offset));
+
+      // 找到當前位置
+      const currentIndex = localMenus.findIndex((m) => m.id === menuId);
+
+      if (targetIndex !== currentIndex) {
         setLocalMenus((prev) => {
           const newMenus = [...prev];
-          const [removed] = newMenus.splice(index, 1);
-          newMenus.splice(newIndex, 0, removed);
+          const [removed] = newMenus.splice(currentIndex, 1);
+          newMenus.splice(targetIndex, 0, removed);
           return newMenus;
         });
-        setDraggedIndex(newIndex);
       }
     },
-    [localMenus.length, draggedIndex]
+    [draggedMenuId, dragStartIndex, localMenus]
   );
 
   // 拖曳結束
   const handleDragEnd = useCallback(async () => {
-    setDraggedIndex(null);
+    setDraggedMenuId(null);
+    setDragStartIndex(null);
 
     // 更新資料庫順序
     const orderedMenus = localMenus.map((menu, idx) => ({
@@ -313,7 +317,7 @@ export default function MenusScreen() {
     <ScrollView
       className="flex-1 bg-gray-50"
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      scrollEnabled={draggedIndex === null}
+      scrollEnabled={draggedMenuId === null}
     >
       <View className="p-4">
         {/* 新增按鈕 */}
@@ -340,6 +344,8 @@ export default function MenusScreen() {
             const itemCount = menuCounts[menu.id] ?? 0;
             const progress = menuProgress[menu.id];
             const colorRank = menuColorRanks[menu.id];
+            const isDragging = draggedMenuId === menu.id;
+            const isOtherDragging = draggedMenuId !== null && draggedMenuId !== menu.id;
 
             return (
               <DraggableMenuCard
@@ -354,7 +360,8 @@ export default function MenusScreen() {
                 onDragEnd={handleDragEnd}
                 onEdit={handleEdit}
                 onStartWorkout={handleStartWorkout}
-                draggedIndex={draggedIndex}
+                isDragging={isDragging}
+                isOtherDragging={isOtherDragging}
               />
             );
           })
