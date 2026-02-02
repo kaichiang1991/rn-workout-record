@@ -25,7 +25,7 @@ export function useTrainingMenus() {
       setLoading(true);
       const db = await getDatabase();
       const results = await db.getAllAsync<TrainingMenu>(
-        "SELECT id, name, description, createdAt, lastCompletedAt FROM training_menus ORDER BY createdAt DESC"
+        "SELECT id, name, description, createdAt, lastCompletedAt, sortOrder FROM training_menus ORDER BY sortOrder ASC"
       );
       setMenus(results);
       setError(null);
@@ -42,9 +42,16 @@ export function useTrainingMenus() {
 
   const createMenu = useCallback(async (input: CreateMenuInput): Promise<TrainingMenu> => {
     const db = await getDatabase();
+
+    // 取得目前最小的 sortOrder，新菜單會放在最前面
+    const minResult = await db.getFirstAsync<{ minOrder: number | null }>(
+      "SELECT MIN(sortOrder) as minOrder FROM training_menus"
+    );
+    const newSortOrder = (minResult?.minOrder ?? 0) - 1;
+
     const result = await db.runAsync(
-      "INSERT INTO training_menus (name, description) VALUES (?, ?)",
-      [input.name, input.description || null]
+      "INSERT INTO training_menus (name, description, sortOrder) VALUES (?, ?, ?)",
+      [input.name, input.description || null, newSortOrder]
     );
 
     const newMenu: TrainingMenu = {
@@ -53,6 +60,7 @@ export function useTrainingMenus() {
       description: input.description || null,
       createdAt: new Date().toISOString(),
       lastCompletedAt: null,
+      sortOrder: newSortOrder,
     };
 
     setMenus((prev) => [newMenu, ...prev]);

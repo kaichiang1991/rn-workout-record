@@ -117,6 +117,26 @@ export async function initDatabase(): Promise<void> {
     await database.execAsync("ALTER TABLE training_menus ADD COLUMN lastCompletedAt TEXT");
   }
 
+  // 遷移：新增 sortOrder 欄位到 training_menus
+  const hasSortOrder = menusInfo.some((col) => col.name === "sortOrder");
+
+  if (!hasSortOrder) {
+    await database.execAsync(
+      "ALTER TABLE training_menus ADD COLUMN sortOrder INTEGER NOT NULL DEFAULT 0"
+    );
+
+    // 初始化現有菜單的 sortOrder（按 createdAt DESC 排序）
+    const existingMenus = await database.getAllAsync<{ id: number; createdAt: string }>(
+      "SELECT id, createdAt FROM training_menus ORDER BY createdAt DESC"
+    );
+    for (let i = 0; i < existingMenus.length; i++) {
+      await database.runAsync("UPDATE training_menus SET sortOrder = ? WHERE id = ?", [
+        i,
+        existingMenus[i].id,
+      ]);
+    }
+  }
+
   // 檢查是否需要加入預設資料
   const result = await database.getFirstAsync<{ count: number }>(
     "SELECT COUNT(*) as count FROM exercises"
@@ -225,6 +245,7 @@ export interface TrainingMenu {
   description: string | null;
   createdAt: string;
   lastCompletedAt: string | null;
+  sortOrder: number;
 }
 
 export interface TrainingMenuItem {
