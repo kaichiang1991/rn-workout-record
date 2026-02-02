@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTrainingMenus } from "@/hooks/useTrainingMenus";
+import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { formatRelativeDate } from "@/utils/date";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TrainingMenu } from "@/db/client";
@@ -182,7 +183,9 @@ function DraggableMenuCard({
 
 export default function MenusScreen() {
   const router = useRouter();
-  const { menus, loading, refresh, getMenuItemCount, updateMenusOrder } = useTrainingMenus();
+  const { menus, loading, refresh, getMenuItemCount, getMenuItems, updateMenusOrder } =
+    useTrainingMenus();
+  const { getSessionById } = useWorkoutSessions();
   const [refreshing, setRefreshing] = useState(false);
   const [menuCounts, setMenuCounts] = useState<Record<number, number>>({});
   const [menuProgress, setMenuProgress] = useState<Record<number, MenuProgress>>({});
@@ -229,9 +232,67 @@ export default function MenusScreen() {
         if (stored) {
           const data = JSON.parse(stored);
           const totalCount = menuCounts[menu.id] || 0;
+
+          // 如果菜單沒有項目了，清除進度記錄
+          if (totalCount === 0) {
+            await AsyncStorage.removeItem(`menu_session_${menu.id}`);
+            continue;
+          }
+
+          // 取得實際的菜單項目 exerciseId 列表
+          const menuItemsList = await getMenuItems(menu.id);
+          const validExerciseIds = new Set(menuItemsList.map((item) => item.exerciseId));
+
+          // 驗證每個記錄：exerciseId 必須存在於菜單中，且至少有一個有效的 sessionId
+          interface SessionRecord {
+            exerciseId: number;
+            sessionIds: number[];
+          }
+          const validRecords: SessionRecord[] = [];
+          for (const record of data.records || []) {
+            // 檢查 exerciseId 是否存在於菜單中
+            if (!validExerciseIds.has(record.exerciseId)) {
+              continue;
+            }
+
+            // 檢查 sessionIds 是否至少有一個有效的 session
+            const validSessionIds: number[] = [];
+            for (const sessionId of record.sessionIds || []) {
+              const session = await getSessionById(sessionId);
+              if (session) {
+                validSessionIds.push(sessionId);
+              }
+            }
+
+            // 只有當至少有一個有效的 session 時，才計入完成
+            if (validSessionIds.length > 0) {
+              validRecords.push({
+                exerciseId: record.exerciseId,
+                sessionIds: validSessionIds,
+              });
+            }
+          }
+
+          // 如果記錄有變更，更新 AsyncStorage
+          const originalRecordsLength = data.records?.length || 0;
+          if (validRecords.length !== originalRecordsLength) {
+            if (validRecords.length === 0) {
+              // 如果沒有有效記錄，清除整個進度
+              await AsyncStorage.removeItem(`menu_session_${menu.id}`);
+            } else {
+              const updatedData = { ...data, records: validRecords };
+              await AsyncStorage.setItem(`menu_session_${menu.id}`, JSON.stringify(updatedData));
+            }
+          }
+
+          // 如果沒有有效的已完成記錄，不顯示進度
+          if (validRecords.length === 0) {
+            continue;
+          }
+
           progress[menu.id] = {
             menuId: menu.id,
-            completedCount: data.records?.length || 0,
+            completedCount: validRecords.length,
             totalCount,
           };
         }
@@ -241,7 +302,7 @@ export default function MenusScreen() {
     if (Object.keys(menuCounts).length > 0) {
       checkProgress();
     }
-  }, [menus, menuCounts]);
+  }, [menus, menuCounts, getMenuItems, getSessionById]);
 
   const handleStartWorkout = (menuId: number) => {
     router.push(`/workout/menu/${menuId}`);
