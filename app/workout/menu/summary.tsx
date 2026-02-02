@@ -16,7 +16,7 @@ export default function WorkoutSummaryScreen() {
   }>();
 
   const menuIdNum = parseInt(menuId!, 10);
-  const { menus, getMenuItems } = useTrainingMenus();
+  const { menus, getMenuItems, markMenuCompleted } = useTrainingMenus();
   const { getExerciseSessionIds, clearProgress } = useMenuSession({ menuId: menuIdNum });
   const { getSessionById } = useWorkoutSessions();
 
@@ -51,6 +51,7 @@ export default function WorkoutSummaryScreen() {
   }, [menuIdNum, getMenuItems, getExerciseSessionIds, getSessionById]);
 
   const handleFinish = async () => {
+    await markMenuCompleted(menuIdNum);
     await clearProgress();
     router.replace("/(tabs)");
   };

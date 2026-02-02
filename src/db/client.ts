@@ -107,6 +107,16 @@ export async function initDatabase(): Promise<void> {
     await database.execAsync("ALTER TABLE training_menu_items ADD COLUMN targetText TEXT");
   }
 
+  // 遷移：新增 lastCompletedAt 欄位到 training_menus
+  const menusInfo = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(training_menus)"
+  );
+  const hasLastCompletedAt = menusInfo.some((col) => col.name === "lastCompletedAt");
+
+  if (!hasLastCompletedAt) {
+    await database.execAsync("ALTER TABLE training_menus ADD COLUMN lastCompletedAt TEXT");
+  }
+
   // 檢查是否需要加入預設資料
   const result = await database.getFirstAsync<{ count: number }>(
     "SELECT COUNT(*) as count FROM exercises"
@@ -214,6 +224,7 @@ export interface TrainingMenu {
   name: string;
   description: string | null;
   createdAt: string;
+  lastCompletedAt: string | null;
 }
 
 export interface TrainingMenuItem {

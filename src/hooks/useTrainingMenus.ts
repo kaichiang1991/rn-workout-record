@@ -25,7 +25,7 @@ export function useTrainingMenus() {
       setLoading(true);
       const db = await getDatabase();
       const results = await db.getAllAsync<TrainingMenu>(
-        "SELECT id, name, description, createdAt FROM training_menus ORDER BY createdAt DESC"
+        "SELECT id, name, description, createdAt, lastCompletedAt FROM training_menus ORDER BY createdAt DESC"
       );
       setMenus(results);
       setError(null);
@@ -52,6 +52,7 @@ export function useTrainingMenus() {
       name: input.name,
       description: input.description || null,
       createdAt: new Date().toISOString(),
+      lastCompletedAt: null,
     };
 
     setMenus((prev) => [newMenu, ...prev]);
@@ -196,6 +197,13 @@ export function useTrainingMenus() {
     return result?.count ?? 0;
   }, []);
 
+  const markMenuCompleted = useCallback(async (menuId: number): Promise<void> => {
+    const db = await getDatabase();
+    const now = new Date().toISOString();
+    await db.runAsync("UPDATE training_menus SET lastCompletedAt = ? WHERE id = ?", [now, menuId]);
+    setMenus((prev) => prev.map((m) => (m.id === menuId ? { ...m, lastCompletedAt: now } : m)));
+  }, []);
+
   return {
     menus,
     loading,
@@ -210,5 +218,6 @@ export function useTrainingMenus() {
     updateMenuItemsOrder,
     updateMenuItemGoal,
     getMenuItemCount,
+    markMenuCompleted,
   };
 }

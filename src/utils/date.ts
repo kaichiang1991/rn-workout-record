@@ -96,3 +96,36 @@ export function getMonthKey(dateStr: string): string {
   const month = getLocalMonth(dateStr) + 1;
   return `${year}年${month}月`;
 }
+
+/**
+ * 格式化相對日期顯示
+ * @param dateString ISO 日期字串
+ * @returns 相對時間字串，例如「今天」、「昨天」、「3 天前」
+ */
+export function formatRelativeDate(dateString: string): string {
+  const todayKey = getTodayDateKey();
+  const dateKey = toLocalDateKey(dateString);
+
+  // 計算天數差
+  const todayDate = new Date(todayKey);
+  const targetDate = new Date(dateKey);
+  const diffTime = todayDate.getTime() - targetDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return "今天";
+  } else if (diffDays === 1) {
+    return "昨天";
+  } else if (diffDays < 7) {
+    return `${diffDays} 天前`;
+  } else if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return `${weeks} 週前`;
+  } else if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30);
+    return `${months} 個月前`;
+  } else {
+    const years = Math.floor(diffDays / 365);
+    return `${years} 年前`;
+  }
+}

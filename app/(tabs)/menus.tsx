@@ -1,8 +1,9 @@
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTrainingMenus } from "@/hooks/useTrainingMenus";
+import { formatRelativeDate } from "@/utils/date";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface MenuProgress {
@@ -70,6 +71,25 @@ export default function MenusScreen() {
     router.push(`/workout/menu/${menuId}`);
   };
 
+  // 計算菜單的顏色排名（相對排序）
+  const menuColorRanks = useMemo(() => {
+    const completedMenus = menus
+      .filter((m) => m.lastCompletedAt)
+      .sort((a, b) => {
+        // 按 lastCompletedAt 降序排列（最新的在前）
+        return new Date(b.lastCompletedAt!).getTime() - new Date(a.lastCompletedAt!).getTime();
+      });
+
+    const colors = ["#22c55e", "#eab308", "#f97316", "#9ca3af"]; // 綠、黃、橘、灰
+    const colorMap: Record<number, string> = {};
+
+    completedMenus.forEach((menu, index) => {
+      colorMap[menu.id] = colors[Math.min(index, colors.length - 1)];
+    });
+
+    return colorMap;
+  }, [menus]);
+
   return (
     <ScrollView
       className="flex-1 bg-gray-50"
@@ -100,46 +120,61 @@ export default function MenusScreen() {
             const itemCount = menuCounts[menu.id] ?? 0;
             const progress = menuProgress[menu.id];
             const hasProgress = progress && progress.completedCount > 0;
+            const colorRank = menuColorRanks[menu.id];
 
             return (
-              <View key={menu.id} className="bg-white rounded-xl p-4 mb-3 shadow-sm">
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold text-gray-800">{menu.name}</Text>
-                    {menu.description && (
-                      <Text className="text-gray-500 text-sm mt-1" numberOfLines={1}>
-                        {menu.description}
-                      </Text>
-                    )}
-                  </View>
-                  <View className="bg-blue-100 rounded-full px-3 py-1">
-                    <Text className="text-blue-600 font-medium">{itemCount} 項目</Text>
-                  </View>
-                </View>
+              <View
+                key={menu.id}
+                className="bg-white rounded-xl mb-3 shadow-sm overflow-hidden flex-row"
+              >
+                {/* 側邊色條 */}
+                {colorRank && <View style={{ width: 4, backgroundColor: colorRank }} />}
 
-                {/* 按鈕區 */}
-                <View className="flex-row gap-2">
-                  <TouchableOpacity
-                    className="flex-1 bg-gray-100 rounded-lg py-2 items-center"
-                    onPress={() => router.push(`/menu/${menu.id}`)}
-                  >
-                    <Text className="text-gray-700 font-medium">編輯</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={`flex-1 rounded-lg py-2 items-center ${
-                      itemCount === 0 ? "bg-gray-300" : "bg-primary-500"
-                    }`}
-                    onPress={() => handleStartWorkout(menu.id)}
-                    disabled={itemCount === 0}
-                  >
-                    <Text
-                      className={`font-medium ${itemCount === 0 ? "text-gray-500" : "text-white"}`}
+                {/* 卡片內容 */}
+                <View className="flex-1 p-4">
+                  <View className="flex-row items-center justify-between mb-3">
+                    <View className="flex-1">
+                      <Text className="text-lg font-semibold text-gray-800">{menu.name}</Text>
+                      {menu.description && (
+                        <Text className="text-gray-500 text-sm mt-1" numberOfLines={1}>
+                          {menu.description}
+                        </Text>
+                      )}
+                      {menu.lastCompletedAt && (
+                        <Text className="text-xs text-gray-400 mt-1">
+                          上次完成：{formatRelativeDate(menu.lastCompletedAt)}
+                        </Text>
+                      )}
+                    </View>
+                    <View className="bg-blue-100 rounded-full px-3 py-1">
+                      <Text className="text-blue-600 font-medium">{itemCount} 項目</Text>
+                    </View>
+                  </View>
+
+                  {/* 按鈕區 */}
+                  <View className="flex-row gap-2">
+                    <TouchableOpacity
+                      className="flex-1 bg-gray-100 rounded-lg py-2 items-center"
+                      onPress={() => router.push(`/menu/${menu.id}`)}
                     >
-                      {hasProgress
-                        ? `繼續 (${progress.completedCount}/${progress.totalCount})`
-                        : "開始訓練"}
-                    </Text>
-                  </TouchableOpacity>
+                      <Text className="text-gray-700 font-medium">編輯</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      className={`flex-1 rounded-lg py-2 items-center ${
+                        itemCount === 0 ? "bg-gray-300" : "bg-primary-500"
+                      }`}
+                      onPress={() => handleStartWorkout(menu.id)}
+                      disabled={itemCount === 0}
+                    >
+                      <Text
+                        className={`font-medium ${itemCount === 0 ? "text-gray-500" : "text-white"}`}
+                      >
+                        {hasProgress
+                          ? `繼續 (${progress.completedCount}/${progress.totalCount})`
+                          : "開始訓練"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             );
