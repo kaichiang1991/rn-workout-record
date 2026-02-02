@@ -212,6 +212,26 @@ export function useTrainingMenus() {
     setMenus((prev) => prev.map((m) => (m.id === menuId ? { ...m, lastCompletedAt: now } : m)));
   }, []);
 
+  const updateMenusOrder = useCallback(
+    async (orderedMenus: { id: number; sortOrder: number }[]): Promise<void> => {
+      const db = await getDatabase();
+      for (const menu of orderedMenus) {
+        await db.runAsync("UPDATE training_menus SET sortOrder = ? WHERE id = ?", [
+          menu.sortOrder,
+          menu.id,
+        ]);
+      }
+      // 更新本地狀態
+      setMenus((prev) => {
+        const orderMap = new Map(orderedMenus.map((m) => [m.id, m.sortOrder]));
+        return [...prev]
+          .map((m) => ({ ...m, sortOrder: orderMap.get(m.id) ?? m.sortOrder }))
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+      });
+    },
+    []
+  );
+
   return {
     menus,
     loading,
@@ -227,5 +247,6 @@ export function useTrainingMenus() {
     updateMenuItemGoal,
     getMenuItemCount,
     markMenuCompleted,
+    updateMenusOrder,
   };
 }
