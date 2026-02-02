@@ -5,7 +5,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExercises } from "@/hooks/useExercises";
 import { Icon } from "@/components/Icon";
-import { DIFFICULTY_LEVELS } from "@/utils/constants";
+import { BODY_PARTS, BodyPartKey, DIFFICULTY_LEVELS } from "@/utils/constants";
 import { formatSessionSummary } from "@/utils/tracking";
 import { getMonthKey } from "@/utils/date";
 
@@ -13,11 +13,29 @@ export default function HistoryScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
+  const [selectedBodyPart, setSelectedBodyPart] = useState<BodyPartKey | null>(null);
   const { sessions, loading, refresh } = useWorkoutSessions({
     exerciseId: selectedExerciseId ?? undefined,
   });
-  const { exercises, loading: exercisesLoading } = useExercises();
+  const { exercises, exerciseBodyParts, loading: exercisesLoading } = useExercises();
   const [refreshing, setRefreshing] = useState(false);
+
+  // 互斥篩選：選擇部位時清除項目篩選
+  const handleSelectBodyPart = (bodyPart: BodyPartKey | null) => {
+    setSelectedBodyPart(bodyPart);
+    setSelectedExerciseId(null);
+  };
+
+  // 互斥篩選：選擇項目時清除部位篩選
+  const handleSelectExercise = (exerciseId: number | null) => {
+    setSelectedExerciseId(exerciseId);
+    setSelectedBodyPart(null);
+  };
+
+  // 取得該部位的所有 exerciseId
+  const getExerciseIdsForBodyPart = (bodyPart: BodyPartKey): number[] => {
+    return exerciseBodyParts.filter((bp) => bp.bodyPart === bodyPart).map((bp) => bp.exerciseId);
+  };
 
   // 當頁面獲得焦點時自動刷新數據
   useFocusEffect(
@@ -55,10 +73,19 @@ export default function HistoryScreen() {
   };
 
   const filteredSessions = sessions.filter((session) => {
+    // 搜尋篩選
     const exerciseName = getExerciseName(session.exerciseId).toLowerCase();
     const notes = (session.notes || "").toLowerCase();
     const query = searchQuery.toLowerCase();
-    return exerciseName.includes(query) || notes.includes(query);
+    const matchesSearch = exerciseName.includes(query) || notes.includes(query);
+
+    // 部位篩選（項目篩選已在 useWorkoutSessions 層級處理）
+    if (selectedBodyPart) {
+      const bodyPartExerciseIds = getExerciseIdsForBodyPart(selectedBodyPart);
+      return matchesSearch && bodyPartExerciseIds.includes(session.exerciseId);
+    }
+
+    return matchesSearch;
   });
 
   // 按月份分組（使用 GMT+8 時區）
@@ -100,12 +127,12 @@ export default function HistoryScreen() {
         </View>
 
         {/* 項目篩選 */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
           <TouchableOpacity
             className={`px-4 py-2 rounded-full mr-2 ${
               selectedExerciseId === null ? "bg-primary-500" : "bg-white border border-gray-200"
             }`}
-            onPress={() => setSelectedExerciseId(null)}
+            onPress={() => handleSelectExercise(null)}
           >
             <Text
               className={selectedExerciseId === null ? "text-white font-medium" : "text-gray-600"}
@@ -123,7 +150,7 @@ export default function HistoryScreen() {
                     ? "bg-primary-500"
                     : "bg-white border border-gray-200"
                 }`}
-                onPress={() => setSelectedExerciseId(exercise.id)}
+                onPress={() => handleSelectExercise(exercise.id)}
               >
                 <Text
                   className={
@@ -134,6 +161,40 @@ export default function HistoryScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
+        </ScrollView>
+
+        {/* 部位篩選 */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+          <TouchableOpacity
+            className={`px-3 py-2 rounded-full mr-2 flex-row items-center ${
+              selectedBodyPart === null ? "bg-primary-500" : "bg-white border border-gray-200"
+            }`}
+            onPress={() => handleSelectBodyPart(null)}
+          >
+            <Text
+              className={selectedBodyPart === null ? "text-white font-medium" : "text-gray-600"}
+            >
+              全部
+            </Text>
+          </TouchableOpacity>
+          {(Object.keys(BODY_PARTS) as BodyPartKey[]).map((key) => {
+            const bodyPart = BODY_PARTS[key];
+            const isSelected = selectedBodyPart === key;
+            return (
+              <TouchableOpacity
+                key={key}
+                className={`px-3 py-2 rounded-full mr-2 flex-row items-center ${
+                  isSelected ? "bg-primary-500" : "bg-white border border-gray-200"
+                }`}
+                onPress={() => handleSelectBodyPart(key)}
+              >
+                <Icon name={bodyPart.icon} size={16} color={isSelected ? "#ffffff" : "#6b7280"} />
+                <Text className={`ml-1 font-medium ${isSelected ? "text-white" : "text-gray-600"}`}>
+                  {bodyPart.shortLabel}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* 紀錄列表 */}
