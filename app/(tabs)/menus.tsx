@@ -54,15 +54,17 @@ function DraggableMenuCard({
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(1)).current;
 
+  const indexRef = useRef(index);
   const onDragStartRef = useRef(onDragStart);
   const onDragMoveRef = useRef(onDragMove);
   const onDragEndRef = useRef(onDragEnd);
 
   useEffect(() => {
+    indexRef.current = index;
     onDragStartRef.current = onDragStart;
     onDragMoveRef.current = onDragMove;
     onDragEndRef.current = onDragEnd;
-  }, [onDragStart, onDragMove, onDragEnd]);
+  }, [index, onDragStart, onDragMove, onDragEnd]);
 
   // 當其他卡片被拖曳時降低透明度
   useEffect(() => {
@@ -92,7 +94,7 @@ function DraggableMenuCard({
       },
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
-        onDragStartRef.current(index);
+        onDragStartRef.current(indexRef.current);
         Animated.spring(scale, {
           toValue: 1.03,
           useNativeDriver: true,
@@ -100,7 +102,7 @@ function DraggableMenuCard({
       },
       onPanResponderMove: (_, gestureState) => {
         pan.setValue({ x: 0, y: gestureState.dy });
-        onDragMoveRef.current(index, gestureState.dy);
+        onDragMoveRef.current(indexRef.current, gestureState.dy);
       },
       onPanResponderRelease: () => {
         Animated.spring(scale, {
@@ -108,7 +110,7 @@ function DraggableMenuCard({
           useNativeDriver: true,
         }).start();
 
-        onDragEndRef.current(index);
+        onDragEndRef.current(indexRef.current);
 
         Animated.spring(pan, {
           toValue: { x: 0, y: 0 },
