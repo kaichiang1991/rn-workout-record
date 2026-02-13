@@ -4,7 +4,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTrainingMenus, MenuItemWithExercise } from "@/hooks/useTrainingMenus";
 import { useMenuSession } from "@/hooks/useMenuSession";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { WorkoutRecordForm } from "@/components/WorkoutRecordForm";
 import { RecentRecordsList } from "@/components/RecentRecordsList";
 import { ExercisePickerModal } from "@/components/ExercisePickerModal";
@@ -20,7 +20,9 @@ export default function MenuWorkoutScreen() {
 
   const { menus, getMenuItems } = useTrainingMenus();
   const { createSession, getRecentByExerciseId, getSessionById } = useWorkoutSessions();
-  const { exercises, exerciseBodyParts, getBodyPartsForExercise } = useExercises();
+  const exercises = useExerciseStore((s) => s.exercises);
+  const exerciseBodyParts = useExerciseStore((s) => s.exerciseBodyParts);
+  const getBodyPartsForExercise = useExerciseStore((s) => s.getBodyPartsForExercise);
   const {
     loading: sessionLoading,
     hasActiveSession,
