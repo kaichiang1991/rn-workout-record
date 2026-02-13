@@ -2,7 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { WorkoutSession } from "@/db/client";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
 import { getTrackingMode, formatDuration, formatSessionSummary } from "@/utils/tracking";
@@ -11,7 +11,7 @@ export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getSessionById, getRecentDaysByExerciseId, deleteSession } = useWorkoutSessions();
-  const { exercises } = useExercises();
+  const exercises = useExerciseStore((s) => s.exercises);
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
   const [loading, setLoading] = useState(true);
