@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { BODY_PARTS } from "@/utils/constants";
 import { Icon } from "@/components/Icon";
 
@@ -13,7 +13,7 @@ const bodyPartOptions = Object.entries(BODY_PARTS).map(([value, { label, icon }]
 
 export default function NewExerciseScreen() {
   const router = useRouter();
-  const { createExercise } = useExercises();
+  const createExercise = useExerciseStore((s) => s.createExercise);
   const [name, setName] = useState("");
   const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>([]);
   const [description, setDescription] = useState("");
