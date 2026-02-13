@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { useState, useEffect } from "react";
-import { useExercises } from "@/hooks/useExercises";
+import { useState, useEffect, useMemo } from "react";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { BodyPartSelector } from "@/components/BodyPartSelector";
 import { RecentRecordsList } from "@/components/RecentRecordsList";
@@ -12,7 +12,12 @@ import { WorkoutSession } from "@/db/client";
 
 export default function NewWorkoutScreen() {
   const router = useRouter();
-  const { filteredExercises, selectedBodyPart, setSelectedBodyPart } = useExercises();
+  const getExercisesByBodyPart = useExerciseStore((s) => s.getExercisesByBodyPart);
+  const [selectedBodyPart, setSelectedBodyPart] = useState<BodyPartKey | null>(null);
+  const filteredExercises = useMemo(
+    () => getExercisesByBodyPart(selectedBodyPart),
+    [selectedBodyPart, getExercisesByBodyPart]
+  );
   const { createSession, getRecentByExerciseId } = useWorkoutSessions();
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
