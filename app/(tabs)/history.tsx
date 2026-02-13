@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { Icon } from "@/components/Icon";
 import { BODY_PARTS, BodyPartKey, DIFFICULTY_LEVELS } from "@/utils/constants";
 import { formatSessionSummary } from "@/utils/tracking";
@@ -17,7 +17,9 @@ export default function HistoryScreen() {
   const { sessions, loading, refresh } = useWorkoutSessions({
     exerciseId: selectedExerciseId ?? undefined,
   });
-  const { exercises, exerciseBodyParts, loading: exercisesLoading } = useExercises();
+  const exercises = useExerciseStore((s) => s.exercises);
+  const exerciseBodyParts = useExerciseStore((s) => s.exerciseBodyParts);
+  const exercisesLoading = useExerciseStore((s) => s.loading);
   const [refreshing, setRefreshing] = useState(false);
 
   // 互斥篩選：選擇部位時清除項目篩選
