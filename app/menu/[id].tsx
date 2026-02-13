@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTrainingMenus, MenuItemWithExercise } from "@/hooks/useTrainingMenus";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { BODY_PARTS, BodyPartKey } from "@/utils/constants";
 import { Exercise } from "@/db/client";
 
@@ -152,7 +152,7 @@ export default function MenuDetailScreen() {
   const menuId = parseInt(id!, 10);
 
   const { menus, deleteMenu, getMenuItems, addMenuItem, removeMenuItem } = useTrainingMenus();
-  const { getExercisesByBodyPart } = useExercises();
+  const getExercisesByBodyPart = useExerciseStore((s) => s.getExercisesByBodyPart);
 
   const [menuItems, setMenuItems] = useState<MenuItemWithExercise[]>([]);
   const [selectedBodyPart, setSelectedBodyPart] = useState<BodyPartKey | null>(null);
