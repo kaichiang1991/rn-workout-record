@@ -2,27 +2,30 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { BODY_PARTS, BodyPartKey } from "@/utils/constants";
 import { Icon, BODY_PART_ICONS, type IconName } from "@/components/Icon";
 
 export default function ExercisesScreen() {
   const router = useRouter();
-  const { exercises, exerciseBodyParts, loading, refresh } = useExercises();
+  const exercises = useExerciseStore((s) => s.exercises);
+  const exerciseBodyParts = useExerciseStore((s) => s.exerciseBodyParts);
+  const loading = useExerciseStore((s) => s.loading);
+  const fetchExercises = useExerciseStore((s) => s.fetchExercises);
   const [refreshing, setRefreshing] = useState(false);
 
   // 當頁面獲得焦點時自動刷新數據
   useFocusEffect(
     useCallback(() => {
-      refresh();
-    }, [refresh])
+      fetchExercises();
+    }, [fetchExercises])
   );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refresh();
+    await fetchExercises();
     setRefreshing(false);
-  }, [refresh]);
+  }, [fetchExercises]);
 
   const activeExercises = exercises.filter((e) => e.isActive);
   const inactiveExercises = exercises.filter((e) => !e.isActive);
