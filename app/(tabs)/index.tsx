@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { useStats } from "@/hooks/useStats";
 import { StatsCard } from "@/components/charts/StatsCard";
 import { BodyPartRadar } from "@/components/charts/BodyPartRadar";
@@ -18,7 +18,9 @@ export default function HomeScreen() {
     loading: sessionsLoading,
     refresh: refreshSessions,
   } = useWorkoutSessions({ limit: 5 });
-  const { exercises, loading: exercisesLoading } = useExercises();
+  const exercises = useExerciseStore((s) => s.exercises);
+  const exercisesLoading = useExerciseStore((s) => s.loading);
+  const fetchExercises = useExerciseStore((s) => s.fetchExercises);
   const { stats, refresh: refreshStats } = useStats();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -27,41 +29,8 @@ export default function HomeScreen() {
     useCallback(() => {
       refreshSessions();
       refreshStats();
-    }, [refreshSessions, refreshStats])
-  );
-
-  // Debug: 印出前五筆資料的完整記錄
-  useFocusEffect(
-    useCallback(() => {
-      if (sessions.length > 0) {
-        console.log("=== 前五筆訓練記錄（GMT+8 時區檢查）===");
-        sessions.slice(0, 5).forEach((session, index) => {
-          const utcDate = new Date(session.date);
-          const localDateStr = utcDate.toLocaleString("zh-TW", {
-            timeZone: "Asia/Taipei",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          });
-          const localDateKey = toLocalDateKey(session.date);
-          console.log(`[${index + 1}] ID: ${session.id}`);
-          console.log(`    運動項目 ID: ${session.exerciseId}`);
-          console.log(`    原始日期: ${session.date}`);
-          console.log(`    GMT+8 日期: ${localDateStr}`);
-          console.log(`    分類日期 Key: ${localDateKey}`);
-          console.log(
-            `    重量: ${session.weight}kg, 次數: ${session.reps}, 組數: ${session.setCount}`
-          );
-          console.log(`    時間記錄: ${session.duration}秒`);
-          console.log(`    難易度: ${session.difficulty}, 自重: ${session.isBodyweight}`);
-          console.log(`    備註: ${session.notes}`);
-          console.log("---");
-        });
-      }
-    }, [sessions])
+      fetchExercises();
+    }, [refreshSessions, refreshStats, fetchExercises])
   );
 
   const onRefresh = useCallback(async () => {
