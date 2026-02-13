@@ -2,13 +2,13 @@ import { View, Text, ScrollView, TouchableOpacity, Platform } from "react-native
 import { useLocalSearchParams, Stack } from "expo-router";
 import { useState } from "react";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { ProgressTrendChart } from "@/components/charts/ProgressTrendChart";
 import { toLocalDateKey } from "@/utils/date";
 
 export default function ExerciseChartScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { exercises } = useExercises();
+  const exercises = useExerciseStore((s) => s.exercises);
   const exercise = exercises.find((e) => e.id === parseInt(id!, 10));
 
   // 預設日期範圍：3 個月
