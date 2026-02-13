@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Switch } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { useExercises } from "@/hooks/useExercises";
+import { useExerciseStore } from "@/store/exerciseStore";
 import { BODY_PARTS } from "@/utils/constants";
 import { Icon } from "@/components/Icon";
 
@@ -14,7 +14,10 @@ const bodyPartOptions = Object.entries(BODY_PARTS).map(([value, { label, icon }]
 export default function EditExerciseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { exercises, updateExercise, deleteExercise, getBodyPartsForExercise } = useExercises();
+  const exercises = useExerciseStore((s) => s.exercises);
+  const updateExercise = useExerciseStore((s) => s.updateExercise);
+  const deleteExercise = useExerciseStore((s) => s.deleteExercise);
+  const getBodyPartsForExercise = useExerciseStore((s) => s.getBodyPartsForExercise);
   const [name, setName] = useState("");
   const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>([]);
   const [description, setDescription] = useState("");
