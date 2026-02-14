@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExerciseStore } from "@/store/exerciseStore";
 import { WorkoutSession } from "@/db/client";
@@ -10,11 +11,16 @@ import { getTrackingMode, formatDuration, formatSessionSummary } from "@/utils/t
 export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getSessionById, getRecentDaysByExerciseId, deleteSession } = useWorkoutSessions();
+  const { getSessionById, getRecentDaysByExerciseId, updateSessionDate, deleteSession } =
+    useWorkoutSessions();
   const exercises = useExerciseStore((s) => s.exercises);
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(new Date());
+  const [pendingDate, setPendingDate] = useState<Date | null>(null);
 
   useEffect(() => {
     loadSession();
@@ -53,6 +59,48 @@ export default function WorkoutDetailScreen() {
         },
       },
     ]);
+  };
+
+  const handleDatePress = () => {
+    if (session) {
+      setTempDate(new Date(session.date));
+      setPendingDate(null);
+      setShowDatePicker(true);
+    }
+  };
+
+  const handleDateChange = (_event: DateTimePickerEvent, date?: Date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setTempDate(date);
+      setShowTimePicker(true);
+    }
+  };
+
+  const handleTimeChange = (_event: DateTimePickerEvent, time?: Date) => {
+    setShowTimePicker(false);
+    if (time) {
+      const finalDate = new Date(tempDate);
+      finalDate.setHours(time.getHours(), time.getMinutes());
+      setPendingDate(finalDate);
+    }
+  };
+
+  const handleConfirmDate = async () => {
+    if (pendingDate && session) {
+      const newDateStr = pendingDate.toISOString();
+      try {
+        await updateSessionDate(session.id, newDateStr);
+        setSession({ ...session, date: newDateStr });
+        setPendingDate(null);
+      } catch {
+        Alert.alert("錯誤", "更新日期失敗");
+      }
+    }
+  };
+
+  const handleCancelDate = () => {
+    setPendingDate(null);
   };
 
   const getExerciseName = (exerciseId: number) => {
@@ -125,7 +173,9 @@ export default function WorkoutDetailScreen() {
               <Text className="text-2xl font-bold text-gray-800">
                 {getExerciseName(session.exerciseId)}
               </Text>
-              <Text className="text-gray-500 mt-1">{formatDate(session.date)}</Text>
+              <TouchableOpacity onPress={handleDatePress}>
+                <Text className="text-primary-600 mt-1 underline">{formatDate(session.date)}</Text>
+              </TouchableOpacity>
             </View>
             <View className="items-center">
               <View
@@ -136,6 +186,49 @@ export default function WorkoutDetailScreen() {
             </View>
           </View>
         </View>
+
+        {/* 日期時間選擇器 */}
+        {showDatePicker && (
+          <DateTimePicker
+            value={tempDate}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={handleDateChange}
+            maximumDate={new Date()}
+          />
+        )}
+        {showTimePicker && (
+          <DateTimePicker
+            value={tempDate}
+            mode="time"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={handleTimeChange}
+          />
+        )}
+
+        {/* 日期修改確認區 */}
+        {pendingDate && (
+          <View className="bg-primary-50 rounded-xl p-4 mb-4 border border-primary-200">
+            <Text className="text-gray-600 text-sm mb-1">修改為</Text>
+            <Text className="text-primary-700 font-bold text-lg">
+              {formatDate(pendingDate.toISOString())}
+            </Text>
+            <View className="flex-row gap-3 mt-3">
+              <TouchableOpacity
+                className="flex-1 bg-gray-200 rounded-lg p-3 items-center"
+                onPress={handleCancelDate}
+              >
+                <Text className="text-gray-600 font-medium">取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 bg-primary-500 rounded-lg p-3 items-center"
+                onPress={handleConfirmDate}
+              >
+                <Text className="text-white font-medium">確認修改</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* 訓練數據 */}
         <View className="flex-row gap-3 mb-4">

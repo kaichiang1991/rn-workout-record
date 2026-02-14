@@ -138,6 +138,13 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
     return newSession;
   }, []);
 
+  const updateSessionDate = useCallback(async (id: number, newDate: string): Promise<void> => {
+    const db = await getDatabase();
+    await db.runAsync("UPDATE workout_sessions SET date = ? WHERE id = ?", [newDate, id]);
+
+    setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, date: newDate } : s)));
+  }, []);
+
   const deleteSession = useCallback(async (id: number): Promise<void> => {
     const db = await getDatabase();
     await db.runAsync("DELETE FROM workout_sessions WHERE id = ?", [id]);
@@ -154,6 +161,7 @@ export function useWorkoutSessions(options: UseWorkoutSessionsOptions = {}) {
     getRecentByExerciseId,
     getRecentDaysByExerciseId,
     createSession,
+    updateSessionDate,
     deleteSession,
   };
 }
