@@ -15,14 +15,18 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kai.workout-record"
+      "bundleIdentifier": "com.kai.workout-record",
+      "infoPlist": {
+        "CFBundleLocalizations": ["zh-Hant"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#3b82f6"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.kai.workoutrecord"
     },
     "web": {
       "favicon": "./assets/favicon.png",
