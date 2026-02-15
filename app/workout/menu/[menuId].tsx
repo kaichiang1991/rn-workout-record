@@ -53,7 +53,8 @@ export default function MenuWorkoutScreen() {
   const [isBodyweight, setIsBodyweight] = useState(false);
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
-  const [duration, setDuration] = useState("");
+  const [minutes, setMinutes] = useState("");
+  const [seconds, setSeconds] = useState("");
   const [setCount, setSetCount] = useState(0);
   const [difficulty, setDifficulty] = useState(3);
   const [notes, setNotes] = useState("");
@@ -125,7 +126,8 @@ export default function MenuWorkoutScreen() {
     setIsBodyweight(false);
     setWeight("");
     setReps("");
-    setDuration("");
+    setMinutes("");
+    setSeconds("");
     setSetCount(0);
     setDifficulty(3);
     setNotes("");
@@ -143,7 +145,8 @@ export default function MenuWorkoutScreen() {
     setIsBodyweight(false);
     setWeight("");
     setReps("");
-    setDuration("");
+    setMinutes("");
+    setSeconds("");
     setSetCount(0);
   };
 
@@ -179,7 +182,8 @@ export default function MenuWorkoutScreen() {
         return;
       }
     } else {
-      if (!duration || parseInt(duration, 10) <= 0) {
+      const totalSeconds = (parseInt(minutes, 10) || 0) * 60 + (parseInt(seconds, 10) || 0);
+      if (totalSeconds <= 0) {
         Alert.alert("提示", "請輸入時間");
         return;
       }
@@ -196,7 +200,10 @@ export default function MenuWorkoutScreen() {
         difficulty,
         isBodyweight: trackingMode === "reps" && isBodyweight,
         notes: notes.trim() || null,
-        duration: trackingMode === "time" ? parseInt(duration, 10) : null,
+        duration:
+          trackingMode === "time"
+            ? (parseInt(minutes, 10) || 0) * 60 + (parseInt(seconds, 10) || 0)
+            : null,
       });
       // 使用原本菜單項目的 exerciseId 來標記完成
       await recordExercise(selectedExercise.exerciseId, session.id);
@@ -512,8 +519,10 @@ export default function MenuWorkoutScreen() {
             <WorkoutRecordForm
               trackingMode={trackingMode}
               onTrackingModeChange={setTrackingMode}
-              duration={duration}
-              onDurationChange={setDuration}
+              minutes={minutes}
+              onMinutesChange={setMinutes}
+              seconds={seconds}
+              onSecondsChange={setSeconds}
               isBodyweight={isBodyweight}
               onIsBodyweightChange={setIsBodyweight}
               weight={weight}
