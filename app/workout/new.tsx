@@ -135,7 +135,11 @@ export default function NewWorkoutScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView
+        className="flex-1"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
+      >
         <View className="p-4">
           {/* 部位選擇 */}
           <View className="mb-4">

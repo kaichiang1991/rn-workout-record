@@ -499,7 +499,11 @@ export default function MenuWorkoutScreen() {
           </View>
 
           {/* 表單 */}
-          <ScrollView className="flex-1 p-4">
+          <ScrollView
+            className="flex-1 p-4"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets
+          >
             {/* 動作名稱區塊（含目標） */}
             <View className="bg-white rounded-xl px-4 py-3 mb-3 flex-row items-center justify-between">
               <Text className="text-xl font-bold text-gray-800">
