@@ -9,9 +9,10 @@ import { WorkoutSession } from "@/db/client";
 
 export default function WorkoutSummaryScreen() {
   const router = useRouter();
-  const { menuId, startedAt, completedCount } = useLocalSearchParams<{
+  const { menuId, startedAt, endedAt, completedCount } = useLocalSearchParams<{
     menuId: string;
     startedAt: string;
+    endedAt: string;
     completedCount: string;
   }>();
 
@@ -62,9 +63,9 @@ export default function WorkoutSummaryScreen() {
 
   // 計算訓練時長
   const calculateDuration = (): string => {
-    if (!startedAt) return "--";
+    if (!startedAt || !endedAt) return "--";
     const start = new Date(startedAt);
-    const end = new Date();
+    const end = new Date(endedAt);
     const diffMs = end.getTime() - start.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 60) {

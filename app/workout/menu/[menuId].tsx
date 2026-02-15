@@ -272,6 +272,7 @@ export default function MenuWorkoutScreen() {
       params: {
         menuId: menuId.toString(),
         startedAt: startedAt || "",
+        endedAt: new Date().toISOString(),
         completedCount: completedCount.toString(),
         totalCount: menuItems.length.toString(),
       },
