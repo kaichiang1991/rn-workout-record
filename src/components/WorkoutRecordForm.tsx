@@ -7,8 +7,10 @@ import { TrackingMode } from "../utils/tracking";
 interface WorkoutRecordFormProps {
   trackingMode: TrackingMode;
   onTrackingModeChange: (mode: TrackingMode) => void;
-  duration: string;
-  onDurationChange: (value: string) => void;
+  minutes: string;
+  onMinutesChange: (value: string) => void;
+  seconds: string;
+  onSecondsChange: (value: string) => void;
   isBodyweight: boolean;
   onIsBodyweightChange: (value: boolean) => void;
   weight: string;
@@ -26,8 +28,10 @@ interface WorkoutRecordFormProps {
 export function WorkoutRecordForm({
   trackingMode,
   onTrackingModeChange,
-  duration,
-  onDurationChange,
+  minutes,
+  onMinutesChange,
+  seconds,
+  onSecondsChange,
   isBodyweight,
   onIsBodyweightChange,
   weight,
@@ -94,19 +98,37 @@ export function WorkoutRecordForm({
         </>
       )}
 
-      {/* 時間模式：時間輸入 */}
+      {/* 時間模式：分鐘與秒鐘輸入 */}
       {trackingMode === "time" && (
-        <View className="mb-4">
-          <Text className="text-base font-bold text-gray-700 mb-2">每組時間</Text>
-          <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
-            <TextInput
-              className="flex-1 text-lg"
-              placeholder="0"
-              keyboardType="number-pad"
-              value={duration}
-              onChangeText={onDurationChange}
-            />
-            <Text className="text-gray-600 text-base ml-2">秒</Text>
+        <View className="flex-row mb-4">
+          {/* 分鐘 */}
+          <View className="flex-1 mr-2">
+            <Text className="text-base font-bold text-gray-700 mb-2">分鐘</Text>
+            <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
+              <TextInput
+                className="flex-1 text-lg"
+                placeholder="0"
+                keyboardType="number-pad"
+                value={minutes}
+                onChangeText={onMinutesChange}
+              />
+              <Text className="text-gray-600 text-base ml-2">分</Text>
+            </View>
+          </View>
+
+          {/* 秒鐘 */}
+          <View className="flex-1 ml-2">
+            <Text className="text-base font-bold text-gray-700 mb-2">秒鐘</Text>
+            <View className="bg-white rounded-xl px-3 py-2 flex-row items-center">
+              <TextInput
+                className="flex-1 text-lg"
+                placeholder="0"
+                keyboardType="number-pad"
+                value={seconds}
+                onChangeText={onSecondsChange}
+              />
+              <Text className="text-gray-600 text-base ml-2">秒</Text>
+            </View>
           </View>
         </View>
       )}

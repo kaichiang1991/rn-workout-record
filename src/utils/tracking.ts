@@ -10,10 +10,18 @@ export function getTrackingMode(session: WorkoutSession): TrackingMode {
 }
 
 /**
- * 格式化時間顯示（統一用秒數）
+ * 格式化時間顯示（分鐘 + 秒鐘）
  */
-export function formatDuration(seconds: number): string {
-  return `${seconds} 秒`;
+export function formatDuration(totalSeconds: number): string {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  if (mins > 0 && secs > 0) {
+    return `${mins}分${secs}秒`;
+  }
+  if (mins > 0) {
+    return `${mins}分`;
+  }
+  return `${secs}秒`;
 }
 
 /**
