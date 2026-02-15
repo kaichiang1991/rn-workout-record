@@ -32,6 +32,18 @@ function AddRecordButton() {
   );
 }
 
+function HeaderSettingsButton() {
+  return (
+    <TouchableOpacity
+      className="ml-4"
+      activeOpacity={0.7}
+      onPress={() => expoRouter.push("/settings")}
+    >
+      <Feather name="settings" size={22} color="#fff" />
+    </TouchableOpacity>
+  );
+}
+
 function HeaderExportButton() {
   return (
     <TouchableOpacity
@@ -74,6 +86,7 @@ export default function TabLayout() {
         options={{
           title: "首頁",
           tabBarIcon: ({ focused }) => <TabIcon name="index" focused={focused} />,
+          headerLeft: () => <HeaderSettingsButton />,
           headerRight: () => <HeaderExportButton />,
         }}
       />
