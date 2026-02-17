@@ -1,5 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { Vibration } from "react-native";
+import { createAudioPlayer } from "expo-audio";
 
 // 震動模式：延遲 0ms，震動 250ms，暫停 250ms，震動 250ms
 const ALARM_VIBRATION_PATTERN: number[] = [0, 250, 250, 250];
@@ -82,10 +83,8 @@ export async function playAlarmFeedback(): Promise<void> {
     Vibration.vibrate(ALARM_VIBRATION_PATTERN);
 
     // TODO: 音效檔案準備好後再啟用
-    // const { sound } = await Audio.Sound.createAsync(
-    //   require('@/assets/sounds/alarm.mp3')
-    // );
-    // await sound.playAsync();
+    const player = createAudioPlayer(require("@/assets/sounds/timesup.mp3"));
+    player.play();
   } catch (error) {
     console.error("音效播放失敗:", error);
     // 至少震動成功了，不阻斷流程
