@@ -82,8 +82,8 @@ export async function playAlarmFeedback(): Promise<void> {
     // 震動（通常不會失敗）
     Vibration.vibrate(ALARM_VIBRATION_PATTERN);
 
-    // TODO: 音效檔案準備好後再啟用
-    const player = createAudioPlayer(require("@/assets/sounds/timesup.mp3"));
+    // 播放音效
+    const player = createAudioPlayer(require("../../assets/sounds/timesup.mp3"));
     player.play();
   } catch (error) {
     console.error("音效播放失敗:", error);
