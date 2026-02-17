@@ -1,6 +1,9 @@
 import * as Notifications from "expo-notifications";
 import { Vibration } from "react-native";
 
+// 震動模式：延遲 0ms，震動 250ms，暫停 250ms，震動 250ms
+const ALARM_VIBRATION_PATTERN = [0, 250, 250, 250];
+
 /**
  * 請求通知權限
  * @returns 是否獲得權限
@@ -28,6 +31,12 @@ export async function requestNotificationPermission(): Promise<boolean> {
  * @returns 通知 ID（失敗時返回空字串）
  */
 export async function scheduleRestEndNotification(seconds: number): Promise<string> {
+  // 驗證參數：秒數必須為正數且不超過 10 分鐘
+  if (seconds <= 0 || seconds > 600) {
+    console.error("無效的倒數秒數:", seconds);
+    return "";
+  }
+
   try {
     const id = await Notifications.scheduleNotificationAsync({
       content: {
@@ -35,7 +44,7 @@ export async function scheduleRestEndNotification(seconds: number): Promise<stri
         body: "準備下一組訓練！",
         sound: true,
         priority: Notifications.AndroidNotificationPriority.HIGH,
-        vibrate: [0, 250, 250, 250],
+        vibrate: ALARM_VIBRATION_PATTERN,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -70,7 +79,7 @@ export async function cancelNotification(id: string): Promise<void> {
 export async function playAlarmFeedback(): Promise<void> {
   try {
     // 震動（通常不會失敗）
-    Vibration.vibrate([0, 250, 250, 250]);
+    Vibration.vibrate(ALARM_VIBRATION_PATTERN);
 
     // TODO: 音效檔案準備好後再啟用
     // const { sound } = await Audio.Sound.createAsync(
