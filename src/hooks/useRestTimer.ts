@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import {
   requestNotificationPermission,
@@ -14,13 +14,34 @@ interface UseRestTimerReturn {
   cancel: () => void;
 }
 
+const MAX_TIMER_DURATION = 10 * 60; // 10 minutes in seconds
+
 export function useRestTimer(): UseRestTimerReturn {
   const [endTime, setEndTime] = useState<number | null>(null);
-  const [notificationId, setNotificationId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isActive, setIsActive] = useState(false);
 
+  const notificationIdRef = useRef<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const cancel = useCallback(() => {
+    // Clear state
+    setEndTime(null);
+    setTimeLeft(0);
+    setIsActive(false);
+
+    // Cancel notification
+    if (notificationIdRef.current) {
+      cancelNotification(notificationIdRef.current);
+      notificationIdRef.current = null;
+    }
+
+    // Clear interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
 
   const start = async (duration: number) => {
     // 1. Request notification permission
@@ -35,28 +56,9 @@ export function useRestTimer(): UseRestTimerReturn {
     // 3. Schedule local notification (background backup)
     if (hasPermission) {
       const notifId = await scheduleRestEndNotification(duration);
-      setNotificationId(notifId);
+      notificationIdRef.current = notifId;
     } else {
       console.warn("通知權限被拒絕，僅前景計時器可用");
-    }
-  };
-
-  const cancel = () => {
-    // Clear state
-    setEndTime(null);
-    setTimeLeft(0);
-    setIsActive(false);
-
-    // Cancel notification
-    if (notificationId) {
-      cancelNotification(notificationId);
-      setNotificationId(null);
-    }
-
-    // Clear interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
     }
   };
 
@@ -77,8 +79,7 @@ export function useRestTimer(): UseRestTimerReturn {
       const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
 
       // Defensive check: abnormal time
-      const maxDuration = 10 * 60; // 10 minutes
-      if (remaining > maxDuration) {
+      if (remaining > MAX_TIMER_DURATION) {
         console.warn("偵測到異常時間，重置計時器");
         cancel();
         return;
@@ -88,20 +89,22 @@ export function useRestTimer(): UseRestTimerReturn {
 
       // Time's up
       if (remaining === 0) {
-        playAlarmFeedback();
         setIsActive(false);
         setEndTime(null);
 
         // Clear notification
-        if (notificationId) {
-          cancelNotification(notificationId);
-          setNotificationId(null);
+        if (notificationIdRef.current) {
+          cancelNotification(notificationIdRef.current);
+          notificationIdRef.current = null;
         }
 
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
+
+        // Play alarm after state updates
+        playAlarmFeedback();
       }
     }, 1000);
 
@@ -111,14 +114,14 @@ export function useRestTimer(): UseRestTimerReturn {
         intervalRef.current = null;
       }
     };
-  }, [endTime, notificationId]);
+  }, [endTime, cancel]);
 
   // Listen to App state changes
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState: AppStateStatus) => {
-      if (nextAppState === "active" && notificationId) {
+      if (nextAppState === "active" && notificationIdRef.current) {
         // Back to foreground: cancel notification (avoid duplicate)
-        cancelNotification(notificationId);
+        cancelNotification(notificationIdRef.current);
       }
       // No extra action needed when going to background - notification already scheduled
     });
@@ -126,7 +129,7 @@ export function useRestTimer(): UseRestTimerReturn {
     return () => {
       subscription.remove();
     };
-  }, [notificationId]);
+  }, []);
 
   // Cleanup on component unmount
   useEffect(() => {
@@ -134,8 +137,8 @@ export function useRestTimer(): UseRestTimerReturn {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-      if (notificationId) {
-        cancelNotification(notificationId);
+      if (notificationIdRef.current) {
+        cancelNotification(notificationIdRef.current);
       }
     };
   }, []);
