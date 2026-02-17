@@ -1,5 +1,4 @@
 import { View, Text, TextInput, Switch } from "react-native";
-import { useEffect, useState } from "react";
 import { SetCounter } from "./SetCounter";
 import { DifficultySelector } from "./DifficultySelector";
 import { TrackingModeSwitch } from "./TrackingModeSwitch";
@@ -49,9 +48,6 @@ export function WorkoutRecordForm({
   notes,
   onNotesChange,
 }: WorkoutRecordFormProps) {
-  // Rest timer state
-  const [isTimerActive, setIsTimerActive] = useState(false);
-
   // Get rest timer settings from store
   const restTimerEnabled = useSettingsStore((s) => s.restTimerEnabled);
   const restTimerMinutes = useSettingsStore((s) => s.restTimerMinutes);
@@ -59,11 +55,6 @@ export function WorkoutRecordForm({
 
   // Use rest timer hook
   const { timeLeft, isActive, start, cancel } = useRestTimer();
-
-  // Sync timer state
-  useEffect(() => {
-    setIsTimerActive(isActive);
-  }, [isActive]);
 
   const handleSetCountChange = (newCount: number) => {
     onSetCountChange(newCount);
@@ -78,7 +69,6 @@ export function WorkoutRecordForm({
 
   const handleTimerCancel = () => {
     cancel();
-    setIsTimerActive(false);
   };
 
   return (
@@ -195,7 +185,7 @@ export function WorkoutRecordForm({
           <SetCounter value={setCount} onChange={handleSetCountChange} />
 
           {/* Conditional render of timer */}
-          {isTimerActive && <RestTimer timeLeft={timeLeft} onCancel={handleTimerCancel} />}
+          {isActive && <RestTimer timeLeft={timeLeft} onCancel={handleTimerCancel} />}
         </View>
       </View>
     </View>
