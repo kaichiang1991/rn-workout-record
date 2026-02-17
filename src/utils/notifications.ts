@@ -2,7 +2,7 @@ import * as Notifications from "expo-notifications";
 import { Vibration } from "react-native";
 
 // 震動模式：延遲 0ms，震動 250ms，暫停 250ms，震動 250ms
-const ALARM_VIBRATION_PATTERN = [0, 250, 250, 250];
+const ALARM_VIBRATION_PATTERN: number[] = [0, 250, 250, 250];
 
 /**
  * 請求通知權限
