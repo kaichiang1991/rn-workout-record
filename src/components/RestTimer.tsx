@@ -15,6 +15,9 @@ export function RestTimer({ timeLeft, onCancel }: RestTimerProps) {
     <TouchableOpacity
       onPress={onCancel}
       className="mt-3 px-4 py-2 bg-primary-100 rounded-lg active:opacity-70"
+      accessibilityLabel="休息計時器"
+      accessibilityHint={`剩餘時間 ${formattedTime}，點擊可提前結束休息`}
+      accessibilityRole="button"
     >
       <Text className="text-primary-600 text-lg font-medium text-center">{`休息中 ${formattedTime}`}</Text>
       <Text className="text-primary-400 text-xs text-center mt-0.5">點擊提前結束</Text>
