@@ -1,8 +1,12 @@
 import { View, Text, TextInput, Switch } from "react-native";
+import { useEffect, useState } from "react";
 import { SetCounter } from "./SetCounter";
 import { DifficultySelector } from "./DifficultySelector";
 import { TrackingModeSwitch } from "./TrackingModeSwitch";
 import { TrackingMode } from "../utils/tracking";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useRestTimer } from "@/hooks/useRestTimer";
+import { RestTimer } from "./RestTimer";
 
 interface WorkoutRecordFormProps {
   trackingMode: TrackingMode;
@@ -45,6 +49,38 @@ export function WorkoutRecordForm({
   notes,
   onNotesChange,
 }: WorkoutRecordFormProps) {
+  // Rest timer state
+  const [isTimerActive, setIsTimerActive] = useState(false);
+
+  // Get rest timer settings from store
+  const restTimerEnabled = useSettingsStore((s) => s.restTimerEnabled);
+  const restTimerMinutes = useSettingsStore((s) => s.restTimerMinutes);
+  const restTimerSeconds = useSettingsStore((s) => s.restTimerSeconds);
+
+  // Use rest timer hook
+  const { timeLeft, isActive, start, cancel } = useRestTimer();
+
+  // Sync timer state
+  useEffect(() => {
+    setIsTimerActive(isActive);
+  }, [isActive]);
+
+  const handleSetCountChange = (newCount: number) => {
+    onSetCountChange(newCount);
+
+    // Condition 1: Set count increased
+    // Condition 2: Rest timer is enabled
+    if (newCount > setCount && restTimerEnabled) {
+      const duration = restTimerMinutes * 60 + restTimerSeconds;
+      start(duration);
+    }
+  };
+
+  const handleTimerCancel = () => {
+    cancel();
+    setIsTimerActive(false);
+  };
+
   return (
     <View>
       {/* 記錄類型切換 */}
@@ -156,7 +192,10 @@ export function WorkoutRecordForm({
       <View className="mb-4">
         <Text className="text-base font-bold text-gray-700 mb-2">完成組數</Text>
         <View className="bg-white rounded-xl py-4 items-center">
-          <SetCounter value={setCount} onChange={onSetCountChange} />
+          <SetCounter value={setCount} onChange={handleSetCountChange} />
+
+          {/* Conditional render of timer */}
+          {isTimerActive && <RestTimer timeLeft={timeLeft} onCancel={handleTimerCancel} />}
         </View>
       </View>
     </View>
