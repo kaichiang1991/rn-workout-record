@@ -1,5 +1,4 @@
 import * as Notifications from "expo-notifications";
-import { Audio } from "expo-av";
 import { Vibration } from "react-native";
 
 /**
