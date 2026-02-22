@@ -9,6 +9,8 @@ interface SettingsState {
   toggleRestTimer: () => void;
   setRestTimerMinutes: (minutes: number) => void;
   setRestTimerSeconds: (seconds: number) => void;
+  alarmVolume: number;
+  setAlarmVolume: (volume: number) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -27,6 +29,11 @@ export const useSettingsStore = create<SettingsState>()(
         // Clamp to 0-59 range
         const clamped = Math.max(0, Math.min(59, seconds));
         set({ restTimerSeconds: clamped });
+      },
+      alarmVolume: 0.5,
+      setAlarmVolume: (volume) => {
+        const clamped = Math.max(0, Math.min(1, volume));
+        set({ alarmVolume: clamped });
       },
     }),
     {
