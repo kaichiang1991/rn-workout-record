@@ -76,6 +76,7 @@ export async function cancelNotification(id: string): Promise<void> {
 
 /**
  * 播放鬧鈴音效和震動（前景使用）
+ * @param volume 音量（0.0 - 1.0），預設 0.5
  */
 export async function playAlarmFeedback(volume: number = 0.5): Promise<void> {
   try {
