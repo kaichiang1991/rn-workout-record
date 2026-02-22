@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, Switch, TextInput } from "react-native";
+import Slider from "@react-native-community/slider";
 import { useSettingsStore } from "@/store/settingsStore";
 
 export default function SettingsScreen() {
@@ -9,6 +10,8 @@ export default function SettingsScreen() {
   const toggleRestTimer = useSettingsStore((s) => s.toggleRestTimer);
   const setRestTimerMinutes = useSettingsStore((s) => s.setRestTimerMinutes);
   const setRestTimerSeconds = useSettingsStore((s) => s.setRestTimerSeconds);
+  const alarmVolume = useSettingsStore((s) => s.alarmVolume);
+  const setAlarmVolume = useSettingsStore((s) => s.setAlarmVolume);
 
   const [minutesText, setMinutesText] = useState(String(restTimerMinutes));
   const [secondsText, setSecondsText] = useState(String(restTimerSeconds));
@@ -59,29 +62,52 @@ export default function SettingsScreen() {
 
         {/* Duration inputs - conditionally shown */}
         {restTimerEnabled && (
-          <View className="flex-row items-center justify-between py-4 pl-4">
-            <Text className="text-base text-gray-600">計時時間</Text>
-            <View className="flex-row items-center gap-2">
-              <TextInput
-                className="w-12 h-10 border border-gray-300 rounded-lg text-center text-base"
-                value={minutesText}
-                onChangeText={handleMinutesChange}
-                onBlur={handleMinutesBlur}
-                keyboardType="numeric"
-                maxLength={1}
-              />
-              <Text className="text-base text-gray-600">分</Text>
-              <TextInput
-                className="w-12 h-10 border border-gray-300 rounded-lg text-center text-base"
-                value={secondsText}
-                onChangeText={handleSecondsChange}
-                onBlur={handleSecondsBlur}
-                keyboardType="numeric"
-                maxLength={2}
-              />
-              <Text className="text-base text-gray-600">秒</Text>
+          <>
+            <View className="flex-row items-center justify-between py-4 pl-4">
+              <Text className="text-base text-gray-600">計時時間</Text>
+              <View className="flex-row items-center gap-2">
+                <TextInput
+                  className="w-12 h-10 border border-gray-300 rounded-lg text-center text-base"
+                  value={minutesText}
+                  onChangeText={handleMinutesChange}
+                  onBlur={handleMinutesBlur}
+                  keyboardType="numeric"
+                  maxLength={1}
+                />
+                <Text className="text-base text-gray-600">分</Text>
+                <TextInput
+                  className="w-12 h-10 border border-gray-300 rounded-lg text-center text-base"
+                  value={secondsText}
+                  onChangeText={handleSecondsChange}
+                  onBlur={handleSecondsBlur}
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+                <Text className="text-base text-gray-600">秒</Text>
+              </View>
             </View>
-          </View>
+            <View className="flex-row items-center justify-between py-4 pl-4 border-t border-gray-100">
+              <Text className="text-base text-gray-600">鬧鈴音量</Text>
+              <View className="flex-row items-center gap-2">
+                <Text className="text-base text-gray-400">🔈</Text>
+                <Slider
+                  style={{ width: 140, height: 40 }}
+                  minimumValue={0}
+                  maximumValue={1}
+                  step={0.01}
+                  value={alarmVolume}
+                  onValueChange={setAlarmVolume}
+                  minimumTrackTintColor="#3b82f6"
+                  maximumTrackTintColor="#d1d5db"
+                  thumbTintColor="#3b82f6"
+                />
+                <Text className="text-base text-gray-400">🔊</Text>
+                <Text className="w-10 text-sm text-gray-500 text-right">
+                  {Math.round(alarmVolume * 100)}%
+                </Text>
+              </View>
+            </View>
+          </>
         )}
       </View>
     </View>
