@@ -6,6 +6,7 @@ import {
   cancelNotification,
   playAlarmFeedback,
 } from "@/utils/notifications";
+import { useSettingsStore } from "@/store/settingsStore";
 
 interface UseRestTimerReturn {
   timeLeft: number;
@@ -17,6 +18,7 @@ interface UseRestTimerReturn {
 const MAX_TIMER_DURATION = 10 * 60; // 10 minutes in seconds
 
 export function useRestTimer(): UseRestTimerReturn {
+  const alarmVolume = useSettingsStore((s) => s.alarmVolume);
   const [endTime, setEndTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isActive, setIsActive] = useState(false);
@@ -104,7 +106,7 @@ export function useRestTimer(): UseRestTimerReturn {
         }
 
         // Play alarm after state updates
-        playAlarmFeedback();
+        playAlarmFeedback(alarmVolume);
       }
     }, 1000);
 
