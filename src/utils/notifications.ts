@@ -1,9 +1,12 @@
 import * as Notifications from "expo-notifications";
 import { Vibration } from "react-native";
-import { createAudioPlayer } from "expo-audio";
+import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
 
 // 震動模式：延遲 0ms，震動 250ms，暫停 250ms，震動 250ms
 const ALARM_VIBRATION_PATTERN: number[] = [0, 250, 250, 250];
+
+// 鬧鈴音量：0.0（靜音）~ 1.0（裝置當前最大音量）
+const ALARM_VOLUME = 0.5;
 
 /**
  * 請求通知權限
@@ -82,8 +85,12 @@ export async function playAlarmFeedback(): Promise<void> {
     // 震動（通常不會失敗）
     Vibration.vibrate(ALARM_VIBRATION_PATTERN);
 
+    // 設定 iOS 音訊模式為 playback，確保靜音模式下仍可播放
+    await setAudioModeAsync({ playsInSilentMode: true });
+
     // 播放音效
     const player = createAudioPlayer(require("../../assets/sounds/timesup.mp3"));
+    player.volume = ALARM_VOLUME;
     player.play();
   } catch (error) {
     console.error("音效播放失敗:", error);
