@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, Switch, TextInput } from "react-native";
 import { useSettingsStore } from "@/store/settingsStore";
 
@@ -9,22 +10,37 @@ export default function SettingsScreen() {
   const setRestTimerMinutes = useSettingsStore((s) => s.setRestTimerMinutes);
   const setRestTimerSeconds = useSettingsStore((s) => s.setRestTimerSeconds);
 
+  const [minutesText, setMinutesText] = useState(String(restTimerMinutes));
+  const [secondsText, setSecondsText] = useState(String(restTimerSeconds));
+
   const handleMinutesChange = (text: string) => {
+    setMinutesText(text);
     const num = parseInt(text, 10);
     if (!isNaN(num)) {
       setRestTimerMinutes(num);
-    } else if (text === "") {
-      setRestTimerMinutes(0);
     }
   };
 
+  const handleMinutesBlur = () => {
+    const num = parseInt(minutesText, 10);
+    const value = isNaN(num) ? 0 : num;
+    setRestTimerMinutes(value);
+    setMinutesText(String(value));
+  };
+
   const handleSecondsChange = (text: string) => {
+    setSecondsText(text);
     const num = parseInt(text, 10);
     if (!isNaN(num)) {
       setRestTimerSeconds(num);
-    } else if (text === "") {
-      setRestTimerSeconds(0);
     }
+  };
+
+  const handleSecondsBlur = () => {
+    const num = parseInt(secondsText, 10);
+    const value = isNaN(num) ? 0 : num;
+    setRestTimerSeconds(value);
+    setSecondsText(String(value));
   };
 
   return (
@@ -48,16 +64,18 @@ export default function SettingsScreen() {
             <View className="flex-row items-center gap-2">
               <TextInput
                 className="w-12 h-10 border border-gray-300 rounded-lg text-center text-base"
-                value={String(restTimerMinutes)}
+                value={minutesText}
                 onChangeText={handleMinutesChange}
+                onBlur={handleMinutesBlur}
                 keyboardType="numeric"
                 maxLength={1}
               />
               <Text className="text-base text-gray-600">分</Text>
               <TextInput
                 className="w-12 h-10 border border-gray-300 rounded-lg text-center text-base"
-                value={String(restTimerSeconds)}
+                value={secondsText}
                 onChangeText={handleSecondsChange}
+                onBlur={handleSecondsBlur}
                 keyboardType="numeric"
                 maxLength={2}
               />
