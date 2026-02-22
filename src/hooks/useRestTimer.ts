@@ -116,7 +116,7 @@ export function useRestTimer(): UseRestTimerReturn {
         intervalRef.current = null;
       }
     };
-  }, [endTime, cancel]);
+  }, [endTime, cancel, alarmVolume]);
 
   // Listen to App state changes
   useEffect(() => {
