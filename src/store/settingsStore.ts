@@ -32,6 +32,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
       alarmVolume: 0.5,
       setAlarmVolume: (volume) => {
+        // Clamp to 0-1 range
         const clamped = Math.max(0, Math.min(1, volume));
         set({ alarmVolume: clamped });
       },
