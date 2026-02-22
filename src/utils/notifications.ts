@@ -5,9 +5,6 @@ import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
 // 震動模式：延遲 0ms，震動 250ms，暫停 250ms，震動 250ms
 const ALARM_VIBRATION_PATTERN: number[] = [0, 250, 250, 250];
 
-// 鬧鈴音量：0.0（靜音）~ 1.0（裝置當前最大音量）
-const ALARM_VOLUME = 0.5;
-
 /**
  * 請求通知權限
  * @returns 是否獲得權限
@@ -80,7 +77,7 @@ export async function cancelNotification(id: string): Promise<void> {
 /**
  * 播放鬧鈴音效和震動（前景使用）
  */
-export async function playAlarmFeedback(): Promise<void> {
+export async function playAlarmFeedback(volume: number = 0.5): Promise<void> {
   try {
     // 震動（通常不會失敗）
     Vibration.vibrate(ALARM_VIBRATION_PATTERN);
@@ -90,7 +87,7 @@ export async function playAlarmFeedback(): Promise<void> {
 
     // 播放音效
     const player = createAudioPlayer(require("../../assets/sounds/timesup.mp3"));
-    player.volume = ALARM_VOLUME;
+    player.volume = volume;
     player.play();
   } catch (error) {
     console.error("音效播放失敗:", error);
