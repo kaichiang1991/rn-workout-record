@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTrainingMenus, MenuItemWithExercise } from "@/hooks/useTrainingMenus";
 import { useMenuSession } from "@/hooks/useMenuSession";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
+import { useRestTimer } from "@/hooks/useRestTimer";
 import { useExerciseStore } from "@/store/exerciseStore";
 import { WorkoutRecordForm } from "@/components/WorkoutRecordForm";
 import { RecentRecordsList } from "@/components/RecentRecordsList";
@@ -20,6 +21,7 @@ export default function MenuWorkoutScreen() {
 
   const { menus, getMenuItems } = useTrainingMenus();
   const { createSession, getRecentByExerciseId, getSessionById } = useWorkoutSessions();
+  const { timeLeft, isActive, start, cancel } = useRestTimer();
   const exercises = useExerciseStore((s) => s.exercises);
   const exerciseBodyParts = useExerciseStore((s) => s.exerciseBodyParts);
   const getBodyPartsForExercise = useExerciseStore((s) => s.getBodyPartsForExercise);
@@ -189,6 +191,7 @@ export default function MenuWorkoutScreen() {
       }
     }
 
+    cancel();
     setSaving(true);
     try {
       const session = await createSession({
@@ -415,13 +418,21 @@ export default function MenuWorkoutScreen() {
         visible={showRecordModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowRecordModal(false)}
+        onRequestClose={() => {
+          cancel();
+          setShowRecordModal(false);
+        }}
       >
         <View className="flex-1 bg-gray-50">
           {/* Modal Header - 顯示菜單名稱與進度 */}
           <View className="bg-white border-b border-gray-200 px-4 pt-4 pb-3">
             <View className="flex-row items-center justify-between">
-              <TouchableOpacity onPress={() => setShowRecordModal(false)}>
+                      <TouchableOpacity
+                onPress={() => {
+                  cancel();
+                  setShowRecordModal(false);
+                }}
+              >
                 <Text className="text-gray-600 text-base">取消</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -540,6 +551,10 @@ export default function MenuWorkoutScreen() {
               onDifficultyChange={setDifficulty}
               notes={notes}
               onNotesChange={setNotes}
+              timerTimeLeft={timeLeft}
+              timerIsActive={isActive}
+              onTimerStart={start}
+              onTimerCancel={cancel}
             />
           </ScrollView>
 

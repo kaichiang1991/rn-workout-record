@@ -4,7 +4,6 @@ import { DifficultySelector } from "./DifficultySelector";
 import { TrackingModeSwitch } from "./TrackingModeSwitch";
 import { TrackingMode } from "../utils/tracking";
 import { useSettingsStore } from "@/store/settingsStore";
-import { useRestTimer } from "@/hooks/useRestTimer";
 import { RestTimer } from "./RestTimer";
 
 interface WorkoutRecordFormProps {
@@ -26,6 +25,10 @@ interface WorkoutRecordFormProps {
   onDifficultyChange: (value: number) => void;
   notes: string;
   onNotesChange: (value: string) => void;
+  timerTimeLeft: number;
+  timerIsActive: boolean;
+  onTimerStart: (duration: number) => void;
+  onTimerCancel: () => void;
 }
 
 export function WorkoutRecordForm({
@@ -47,14 +50,15 @@ export function WorkoutRecordForm({
   onDifficultyChange,
   notes,
   onNotesChange,
+  timerTimeLeft,
+  timerIsActive,
+  onTimerStart,
+  onTimerCancel,
 }: WorkoutRecordFormProps) {
   // Get rest timer settings from store
   const restTimerEnabled = useSettingsStore((s) => s.restTimerEnabled);
   const restTimerMinutes = useSettingsStore((s) => s.restTimerMinutes);
   const restTimerSeconds = useSettingsStore((s) => s.restTimerSeconds);
-
-  // Use rest timer hook
-  const { timeLeft, isActive, start, cancel } = useRestTimer();
 
   const handleSetCountChange = (newCount: number) => {
     onSetCountChange(newCount);
@@ -63,12 +67,8 @@ export function WorkoutRecordForm({
     // Condition 2: Rest timer is enabled
     if (newCount > setCount && restTimerEnabled) {
       const duration = restTimerMinutes * 60 + restTimerSeconds;
-      start(duration);
+      onTimerStart(duration);
     }
-  };
-
-  const handleTimerCancel = () => {
-    cancel();
   };
 
   return (
@@ -185,7 +185,7 @@ export function WorkoutRecordForm({
           <SetCounter value={setCount} onChange={handleSetCountChange} />
 
           {/* Conditional render of timer */}
-          {isActive && <RestTimer timeLeft={timeLeft} onCancel={handleTimerCancel} />}
+          {timerIsActive && <RestTimer timeLeft={timerTimeLeft} onCancel={onTimerCancel} />}
         </View>
       </View>
     </View>
