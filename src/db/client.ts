@@ -117,6 +117,16 @@ export async function initDatabase(): Promise<void> {
     await database.execAsync("ALTER TABLE training_menus ADD COLUMN lastCompletedAt TEXT");
   }
 
+  // 建立 MenuCompletions 表（完成歷史紀錄）
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS menu_completions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menuId INTEGER NOT NULL,
+      completedAt TEXT NOT NULL,
+      FOREIGN KEY (menuId) REFERENCES training_menus(id) ON DELETE CASCADE
+    );
+  `);
+
   // 遷移：新增 sortOrder 欄位到 training_menus
   const hasSortOrder = menusInfo.some((col) => col.name === "sortOrder");
 
@@ -246,6 +256,12 @@ export interface TrainingMenu {
   createdAt: string;
   lastCompletedAt: string | null;
   sortOrder: number;
+}
+
+export interface MenuCompletion {
+  id: number;
+  menuId: number;
+  completedAt: string;
 }
 
 export interface TrainingMenuItem {
