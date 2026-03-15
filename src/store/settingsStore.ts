@@ -11,6 +11,8 @@ interface SettingsState {
   setRestTimerSeconds: (seconds: number) => void;
   alarmVolume: number;
   setAlarmVolume: (volume: number) => void;
+  historyDays: number;
+  setHistoryDays: (days: number) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -35,6 +37,12 @@ export const useSettingsStore = create<SettingsState>()(
         // Clamp to 0-1 range
         const clamped = Math.max(0, Math.min(1, volume));
         set({ alarmVolume: clamped });
+      },
+      historyDays: 7,
+      setHistoryDays: (days) => {
+        // Clamp to 1-365 range
+        const clamped = Math.max(1, Math.min(365, days));
+        set({ historyDays: clamped });
       },
     }),
     {

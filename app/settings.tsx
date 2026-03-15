@@ -12,9 +12,12 @@ export default function SettingsScreen() {
   const setRestTimerSeconds = useSettingsStore((s) => s.setRestTimerSeconds);
   const alarmVolume = useSettingsStore((s) => s.alarmVolume);
   const setAlarmVolume = useSettingsStore((s) => s.setAlarmVolume);
+  const historyDays = useSettingsStore((s) => s.historyDays);
+  const setHistoryDays = useSettingsStore((s) => s.setHistoryDays);
 
   const [minutesText, setMinutesText] = useState(String(restTimerMinutes));
   const [secondsText, setSecondsText] = useState(String(restTimerSeconds));
+  const [historyDaysText, setHistoryDaysText] = useState(String(historyDays));
 
   const handleMinutesChange = (text: string) => {
     setMinutesText(text);
@@ -44,6 +47,21 @@ export default function SettingsScreen() {
     const value = isNaN(num) ? 0 : num;
     setRestTimerSeconds(value);
     setSecondsText(String(value));
+  };
+
+  const handleHistoryDaysChange = (text: string) => {
+    setHistoryDaysText(text);
+    const num = parseInt(text, 10);
+    if (!isNaN(num)) {
+      setHistoryDays(num);
+    }
+  };
+
+  const handleHistoryDaysBlur = () => {
+    const num = parseInt(historyDaysText, 10);
+    const value = isNaN(num) ? 7 : num;
+    setHistoryDays(value);
+    setHistoryDaysText(String(value));
   };
 
   return (
@@ -109,6 +127,24 @@ export default function SettingsScreen() {
             </View>
           </>
         )}
+      </View>
+
+      {/* 歷史紀錄設定 */}
+      <View className="bg-white mt-4 mx-4 rounded-xl px-4">
+        <View className="flex-row items-center justify-between py-4">
+          <Text className="text-base text-gray-800">歷史紀錄天數</Text>
+          <View className="flex-row items-center gap-2">
+            <TextInput
+              className="w-16 h-10 border border-gray-300 rounded-lg text-center text-base"
+              value={historyDaysText}
+              onChangeText={handleHistoryDaysChange}
+              onBlur={handleHistoryDaysBlur}
+              keyboardType="numeric"
+              maxLength={3}
+            />
+            <Text className="text-base text-gray-600">天</Text>
+          </View>
+        </View>
       </View>
     </View>
   );

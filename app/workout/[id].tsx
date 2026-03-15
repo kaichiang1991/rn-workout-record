@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExerciseStore } from "@/store/exerciseStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import { WorkoutSession } from "@/db/client";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
 import { getTrackingMode, formatDuration, formatSessionSummary } from "@/utils/tracking";
@@ -14,6 +15,7 @@ export default function WorkoutDetailScreen() {
   const { getSessionById, getRecentDaysByExerciseId, updateSessionDate, deleteSession } =
     useWorkoutSessions();
   const exercises = useExerciseStore((s) => s.exercises);
+  const historyDays = useSettingsStore((s) => s.historyDays);
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ export default function WorkoutDetailScreen() {
 
   useEffect(() => {
     loadSession();
-  }, [id]);
+  }, [id, historyDays]);
 
   const loadSession = async () => {
     if (!id) return;
@@ -33,7 +35,7 @@ export default function WorkoutDetailScreen() {
       const data = await getSessionById(parseInt(id, 10));
       setSession(data);
       if (data) {
-        const recent = await getRecentDaysByExerciseId(data.exerciseId, 7, data.id);
+        const recent = await getRecentDaysByExerciseId(data.exerciseId, historyDays, data.id);
         setRecentRecords(recent);
       }
     } catch {
@@ -292,9 +294,9 @@ export default function WorkoutDetailScreen() {
           <Text className="text-red-500 font-medium">刪除紀錄</Text>
         </TouchableOpacity>
 
-        {/* 近7天紀錄 */}
+        {/* 近n天紀錄 */}
         <View className="mt-6">
-          <Text className="text-lg font-bold text-gray-700 mb-3">近 7 天紀錄</Text>
+          <Text className="text-lg font-bold text-gray-700 mb-3">近 {historyDays} 天紀錄</Text>
           {recentRecords.length > 0 ? (
             <ScrollView
               className="bg-white rounded-xl"
