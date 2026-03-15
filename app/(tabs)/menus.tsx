@@ -30,6 +30,7 @@ interface DraggableMenuCardProps {
   itemCount: number;
   progress: MenuProgress | undefined;
   colorRank: string | undefined;
+  completionCount30Days: number;
   onDragStart: (menuId: number, index: number) => void;
   onDragMove: (menuId: number, dy: number) => void;
   onDragEnd: () => void;
@@ -45,6 +46,7 @@ function DraggableMenuCard({
   itemCount,
   progress,
   colorRank,
+  completionCount30Days,
   onDragStart,
   onDragMove,
   onDragEnd,
@@ -147,6 +149,9 @@ function DraggableMenuCard({
                   上次完成：{formatRelativeDate(menu.lastCompletedAt)}
                 </Text>
               )}
+              <Text className="text-xs text-gray-400 mt-0.5">
+                近30天：{completionCount30Days} 次
+              </Text>
             </View>
             <View className="bg-blue-100 rounded-full px-3 py-1">
               <Text className="text-blue-600 font-medium">{itemCount} 項目</Text>
@@ -183,11 +188,19 @@ function DraggableMenuCard({
 
 export default function MenusScreen() {
   const router = useRouter();
-  const { menus, loading, refresh, getMenuItemCount, getMenuItems, updateMenusOrder } =
-    useTrainingMenus();
+  const {
+    menus,
+    loading,
+    refresh,
+    getMenuItemCount,
+    getMenuItems,
+    updateMenusOrder,
+    getMenuCompletionCountLast30Days,
+  } = useTrainingMenus();
   const { getSessionById } = useWorkoutSessions();
   const [refreshing, setRefreshing] = useState(false);
   const [menuCounts, setMenuCounts] = useState<Record<number, number>>({});
+  const [menuCompletionCounts, setMenuCompletionCounts] = useState<Record<number, number>>({});
   const [menuProgress, setMenuProgress] = useState<Record<number, MenuProgress>>({});
   const [draggedMenuId, setDraggedMenuId] = useState<number | null>(null);
   const [dragStartIndex, setDragStartIndex] = useState<number | null>(null);
@@ -222,6 +235,18 @@ export default function MenusScreen() {
     };
     fetchCounts();
   }, [menus, getMenuItemCount]);
+
+  // 取得每個菜單近30天完成次數
+  useEffect(() => {
+    const fetchCompletionCounts = async () => {
+      const counts: Record<number, number> = {};
+      for (const menu of menus) {
+        counts[menu.id] = await getMenuCompletionCountLast30Days(menu.id);
+      }
+      setMenuCompletionCounts(counts);
+    };
+    fetchCompletionCounts();
+  }, [menus, getMenuCompletionCountLast30Days]);
 
   // 檢查菜單進度
   useEffect(() => {
@@ -416,6 +441,7 @@ export default function MenusScreen() {
                 itemCount={itemCount}
                 progress={progress}
                 colorRank={colorRank}
+                completionCount30Days={menuCompletionCounts[menu.id] ?? 0}
                 onDragStart={handleDragStart}
                 onDragMove={handleDragMove}
                 onDragEnd={handleDragEnd}

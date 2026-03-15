@@ -209,7 +209,22 @@ export function useTrainingMenus() {
     const db = await getDatabase();
     const now = new Date().toISOString();
     await db.runAsync("UPDATE training_menus SET lastCompletedAt = ? WHERE id = ?", [now, menuId]);
+    await db.runAsync("INSERT INTO menu_completions (menuId, completedAt) VALUES (?, ?)", [
+      menuId,
+      now,
+    ]);
     setMenus((prev) => prev.map((m) => (m.id === menuId ? { ...m, lastCompletedAt: now } : m)));
+  }, []);
+
+  const getMenuCompletionCountLast30Days = useCallback(async (menuId: number): Promise<number> => {
+    const db = await getDatabase();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const result = await db.getFirstAsync<{ count: number }>(
+      "SELECT COUNT(*) as count FROM menu_completions WHERE menuId = ? AND completedAt >= ?",
+      [menuId, thirtyDaysAgo.toISOString()]
+    );
+    return result?.count ?? 0;
   }, []);
 
   const updateMenusOrder = useCallback(
@@ -247,6 +262,7 @@ export function useTrainingMenus() {
     updateMenuItemGoal,
     getMenuItemCount,
     markMenuCompleted,
+    getMenuCompletionCountLast30Days,
     updateMenusOrder,
   };
 }
