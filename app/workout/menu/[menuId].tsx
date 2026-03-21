@@ -248,8 +248,8 @@ export default function MenuWorkoutScreen() {
     if (completedCount > 0 && completedCount < menuItems.length) {
       Alert.alert("離開訓練", "要保留目前的進度嗎？", [
         {
-          text: "保留進度",
-          onPress: () => router.back(),
+          text: "標記完成",
+          onPress: () => handleFinish(),
         },
         {
           text: "不保留",
