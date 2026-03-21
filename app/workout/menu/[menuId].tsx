@@ -298,7 +298,7 @@ export default function MenuWorkoutScreen() {
       {/* Header */}
       <View className="bg-white border-b border-gray-200 px-4 pt-12 pb-4">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={handleBack} className="mr-3">
+          <TouchableOpacity onPress={() => router.back()} className="mr-3">
             <Icon name="arrow-left" size={24} color="#374151" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-gray-800 flex-1">{menu.name}</Text>
@@ -406,6 +406,18 @@ export default function MenuWorkoutScreen() {
             onPress={handleFinish}
           >
             <Text className="text-white text-lg font-semibold">完成訓練</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* 保留按鈕（訓練進行中但未全部完成） */}
+      {completedCount > 0 && completedCount < menuItems.length && (
+        <View className="p-4 bg-white border-t border-gray-200">
+          <TouchableOpacity
+            className="bg-primary-500 rounded-xl p-4 items-center"
+            onPress={handleBack}
+          >
+            <Text className="text-white text-lg font-semibold">保留</Text>
           </TouchableOpacity>
         </View>
       )}
