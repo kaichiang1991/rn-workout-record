@@ -19,7 +19,8 @@ export default function MenuWorkoutScreen() {
   const menuId = parseInt(menuIdParam!, 10);
 
   const { menus, getMenuItems } = useTrainingMenus();
-  const { createSession, getRecentByExerciseId, getSessionById } = useWorkoutSessions();
+  const { createSession, getRecentByExerciseId, getSessionById, deleteSession } =
+    useWorkoutSessions();
   const exercises = useExerciseStore((s) => s.exercises);
   const exerciseBodyParts = useExerciseStore((s) => s.exerciseBodyParts);
   const getBodyPartsForExercise = useExerciseStore((s) => s.getBodyPartsForExercise);
@@ -28,6 +29,7 @@ export default function MenuWorkoutScreen() {
     hasActiveSession,
     completedCount,
     startedAt,
+    progress,
     startSession,
     recordExercise,
     isExerciseCompleted,
@@ -244,26 +246,30 @@ export default function MenuWorkoutScreen() {
     });
   };
 
-  const handleBack = () => {
-    if (completedCount > 0 && completedCount < menuItems.length) {
-      Alert.alert("離開訓練", "要保留目前的進度嗎？", [
-        {
-          text: "標記完成",
-          onPress: () => handleFinish(),
+  const handleCancel = () => {
+    Alert.alert("取消此次紀錄", "確定要取消嗎？已記錄的訓練資料將會被刪除。", [
+      { text: "返回", style: "cancel" },
+      {
+        text: "確定取消",
+        style: "destructive",
+        onPress: async () => {
+          // 刪除本次訓練中所有已建立的 workout sessions
+          if (progress) {
+            for (const record of progress.records) {
+              for (const sessionId of record.sessionIds) {
+                await deleteSession(sessionId);
+              }
+            }
+          }
+          await clearProgress();
+          router.back();
         },
-        {
-          text: "不保留",
-          style: "destructive",
-          onPress: async () => {
-            await clearProgress();
-            router.back();
-          },
-        },
-        { text: "取消", style: "cancel" },
-      ]);
-    } else {
-      router.back();
-    }
+      },
+    ]);
+  };
+
+  const handleKeepAndLeave = () => {
+    handleFinish();
   };
 
   const handleFinish = () => {
@@ -398,26 +404,20 @@ export default function MenuWorkoutScreen() {
         </View>
       </ScrollView>
 
-      {/* 完成按鈕 */}
-      {completedCount === menuItems.length && menuItems.length > 0 && (
-        <View className="p-4 bg-white border-t border-gray-200">
+      {/* 底部按鈕（有完成項目時顯示） */}
+      {completedCount > 0 && (
+        <View className="p-4 bg-white border-t border-gray-200 flex-row gap-3">
           <TouchableOpacity
-            className="bg-green-500 rounded-xl p-4 items-center"
-            onPress={handleFinish}
+            className="flex-1 bg-red-50 border border-red-300 rounded-xl p-4 items-center"
+            onPress={handleCancel}
           >
-            <Text className="text-white text-lg font-semibold">完成訓練</Text>
+            <Text className="text-red-500 text-base font-semibold">取消此次紀錄</Text>
           </TouchableOpacity>
-        </View>
-      )}
-
-      {/* 保留按鈕（訓練進行中但未全部完成） */}
-      {completedCount > 0 && completedCount < menuItems.length && (
-        <View className="p-4 bg-white border-t border-gray-200">
           <TouchableOpacity
-            className="bg-primary-500 rounded-xl p-4 items-center"
-            onPress={handleBack}
+            className="flex-1 bg-primary-500 rounded-xl p-4 items-center"
+            onPress={handleKeepAndLeave}
           >
-            <Text className="text-white text-lg font-semibold">保留</Text>
+            <Text className="text-white text-base font-semibold">保留並離開</Text>
           </TouchableOpacity>
         </View>
       )}
