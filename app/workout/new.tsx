@@ -53,14 +53,23 @@ export default function NewWorkoutScreen() {
   }, [selectedExerciseId, getRecentByExerciseId]);
 
   const handleSelectRecentRecord = (record: WorkoutSession) => {
-    if (record.isBodyweight) {
-      setIsBodyweight(true);
+    if (record.duration !== null) {
+      setTrackingMode("time");
+      setMinutes(Math.floor(record.duration / 60).toString());
+      setSeconds((record.duration % 60).toString());
       setWeight("");
+      setReps("");
     } else {
-      setIsBodyweight(false);
-      setWeight(record.weight?.toString() || "");
+      setTrackingMode("reps");
+      if (record.isBodyweight) {
+        setIsBodyweight(true);
+        setWeight("");
+      } else {
+        setIsBodyweight(false);
+        setWeight(record.weight?.toString() || "");
+      }
+      setReps(record.reps?.toString() || "");
     }
-    setReps(record.reps?.toString() || "");
     setSetCount(0);
     setHasSelectedRecentRecord(true);
   };
