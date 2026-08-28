@@ -13,7 +13,8 @@ import * as Sharing from "expo-sharing";
 import { captureRef } from "react-native-view-shot";
 import { useExportData, ExportData } from "@/hooks/useExportData";
 import { Icon } from "@/components/Icon";
-import { formatExportSummary, formatExerciseStat, formatDetailItem } from "@/utils/exportFormat";
+import { ExportChart } from "@/components/export/ExportChart";
+import { formatExportSummary, formatDetailItem } from "@/utils/exportFormat";
 
 type ExportFormat = "chart" | "text";
 
@@ -329,104 +330,7 @@ export default function ExportScreen() {
               </View>
             ) : exportData ? (
               format === "chart" ? (
-                <View
-                  ref={chartRef}
-                  collapsable={false}
-                  style={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: 12,
-                    padding: 16,
-                  }}
-                >
-                  {/* 圖表預覽 - 使用 inline style 確保截圖正確 */}
-                  <Text
-                    style={{
-                      fontSize: 20,
-                      fontWeight: "bold",
-                      color: "#1f2937",
-                      textAlign: "center",
-                      marginBottom: 4,
-                    }}
-                  >
-                    訓練統計
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      color: "#6b7280",
-                      textAlign: "center",
-                      marginBottom: 8,
-                    }}
-                  >
-                    {exportData.stats.startDate.replace(/-/g, "/")} ~{" "}
-                    {exportData.stats.endDate.replace(/-/g, "/")}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      color: "#4b5563",
-                      textAlign: "center",
-                      marginBottom: 16,
-                    }}
-                  >
-                    {formatExportSummary(exportData.stats)}
-                  </Text>
-                  <View style={{ height: 1, backgroundColor: "#e5e7eb", marginBottom: 16 }} />
-                  {exportData.stats.exerciseStats.slice(0, 5).map((exercise, index) => {
-                    const maxSets = Math.max(
-                      ...exportData.stats.exerciseStats.map((e) => e.totalSets),
-                      1
-                    );
-                    const barWidth = (exercise.totalSets / maxSets) * 100;
-                    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
-                    return (
-                      <View key={exercise.exerciseId} style={{ marginBottom: 12 }}>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            marginBottom: 4,
-                          }}
-                        >
-                          <Text style={{ color: "#374151" }}>{exercise.exerciseName}</Text>
-                          <Text style={{ color: "#6b7280", fontSize: 14 }}>
-                            {formatExerciseStat(exercise)}
-                          </Text>
-                        </View>
-                        <View
-                          style={{
-                            height: 20,
-                            backgroundColor: "#f3f4f6",
-                            borderRadius: 10,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <View
-                            style={{
-                              height: "100%",
-                              width: `${Math.max(barWidth, 5)}%`,
-                              backgroundColor: colors[index % colors.length],
-                              borderRadius: 10,
-                            }}
-                          />
-                        </View>
-                      </View>
-                    );
-                  })}
-                  {/* 底部浮水印 */}
-                  <View
-                    style={{
-                      marginTop: 16,
-                      paddingTop: 12,
-                      borderTopWidth: 1,
-                      borderTopColor: "#f3f4f6",
-                    }}
-                  >
-                    <Text style={{ color: "#9ca3af", fontSize: 12, textAlign: "center" }}>
-                      Workout Record App
-                    </Text>
-                  </View>
-                </View>
+                <ExportChart ref={chartRef} stats={exportData.stats} />
               ) : (
                 <ScrollView className="bg-white rounded-xl max-h-96">
                   <View className="p-4">
