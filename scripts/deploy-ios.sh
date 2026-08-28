@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
 # 顏色輸出
 RED='\033[0;31m'
@@ -54,8 +55,8 @@ xcodebuild \
     -configuration "$CONFIGURATION" \
     -scheme app \
     -destination "id=$DEVICE_ID" \
-    -allowProvisioningUpdates \
-    | grep -E "(error:|warning:|BUILD SUCCEEDED|BUILD FAILED)" || true
+    -allowProvisioningUpdates 2>&1 \
+    | grep -E "(error:|warning:|BUILD SUCCEEDED|BUILD FAILED|xcodebuild: error)"
 
 # 檢查構建結果
 APP_PATH="$HOME/Library/Developer/Xcode/DerivedData/app-*/Build/Products/$CONFIGURATION-iphoneos/app.app"
@@ -70,13 +71,13 @@ echo -e "${GREEN}✅ 構建成功${NC}"
 
 # 安裝到裝置
 echo -e "${YELLOW}📲 正在安裝到 $DEVICE...${NC}"
-xcrun devicectl device install app --device "$DEVICE" "$APP_ACTUAL"
+xcrun devicectl device install app --device "$DEVICE_ID" "$APP_ACTUAL"
 
 echo -e "${GREEN}✅ 安裝成功！${NC}"
 
 # 啟動 app
 echo -e "${YELLOW}🎯 正在啟動 app...${NC}"
-xcrun devicectl device process launch --device "$DEVICE" com.kai.workout-record 2>&1 || {
+xcrun devicectl device process launch --device "$DEVICE_ID" com.kai.workout-record 2>&1 || {
     echo -e "${YELLOW}⚠️  App 無法自動啟動，請在裝置上手動開啟${NC}"
     echo -e "${YELLOW}   如果是首次安裝，請到「設定 > 一般 > VPN與裝置管理」信任開發者${NC}"
 }
