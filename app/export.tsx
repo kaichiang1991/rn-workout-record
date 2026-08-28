@@ -14,6 +14,7 @@ import * as Sharing from "expo-sharing";
 import { captureRef } from "react-native-view-shot";
 import { useExportData, ExportData } from "@/hooks/useExportData";
 import { Icon } from "@/components/Icon";
+import { formatExportSummary, formatExerciseStat, formatDetailItem } from "@/utils/exportFormat";
 
 type ExportFormat = "chart" | "text";
 
@@ -181,7 +182,7 @@ export default function ExportScreen() {
     const lines: string[] = [
       "📋 訓練紀錄",
       `${formatDate(stats.startDate)} ~ ${formatDate(stats.endDate)}`,
-      `共訓練 ${stats.totalDays} 天 ｜ 總計 ${stats.totalSets} 組`,
+      formatExportSummary(stats),
       "",
     ];
 
@@ -191,11 +192,7 @@ export default function ExportScreen() {
       lines.push("────────────────────");
 
       for (const item of day.items) {
-        let line = `• ${item.exerciseName}｜${item.sets}組 × ${item.reps}下`;
-        if (item.weight != null && item.weight > 0) {
-          line += `｜${item.weight}kg`;
-        }
-        lines.push(line);
+        lines.push(`• ${formatDetailItem(item)}`);
 
         if (item.notes) {
           lines.push(`  └ ${item.notes}`);
@@ -377,7 +374,7 @@ export default function ExportScreen() {
                       marginBottom: 16,
                     }}
                   >
-                    共訓練 {exportData.stats.totalDays} 天 ｜ 總計 {exportData.stats.totalSets} 組
+                    {formatExportSummary(exportData.stats)}
                   </Text>
                   <View style={{ height: 1, backgroundColor: "#e5e7eb", marginBottom: 16 }} />
                   {exportData.stats.exerciseStats.slice(0, 5).map((exercise, index) => {
@@ -398,7 +395,7 @@ export default function ExportScreen() {
                         >
                           <Text style={{ color: "#374151" }}>{exercise.exerciseName}</Text>
                           <Text style={{ color: "#6b7280", fontSize: 14 }}>
-                            {exercise.totalSets}組 / {exercise.totalReps}下
+                            {formatExerciseStat(exercise)}
                           </Text>
                         </View>
                         <View
@@ -444,7 +441,7 @@ export default function ExportScreen() {
                       {exportData.stats.endDate.replace(/-/g, "/")}
                     </Text>
                     <Text className="text-gray-600 text-sm mt-1 mb-3">
-                      共訓練 {exportData.stats.totalDays} 天 ｜ 總計 {exportData.stats.totalSets} 組
+                      {formatExportSummary(exportData.stats)}
                     </Text>
                     {exportData.dailyDetails.map((day) => (
                       <View key={day.date} className="mb-4">
@@ -455,10 +452,7 @@ export default function ExportScreen() {
                         </View>
                         {day.items.map((item, index) => (
                           <View key={`${day.date}-${index}`} className="ml-2 mb-1">
-                            <Text className="text-gray-600">
-                              • {item.exerciseName}｜{item.sets}組 × {item.reps}下
-                              {item.weight != null && item.weight > 0 && `｜${item.weight}kg`}
-                            </Text>
+                            <Text className="text-gray-600">• {formatDetailItem(item)}</Text>
                             {item.notes && (
                               <Text className="text-gray-400 text-xs ml-3">└ {item.notes}</Text>
                             )}

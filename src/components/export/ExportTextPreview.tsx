@@ -1,5 +1,6 @@
 import { View, Text, ScrollView } from "react-native";
 import type { ExportStats, DailyDetail } from "@/hooks/useExportData";
+import { formatExportSummary, formatDetailItem } from "@/utils/exportFormat";
 
 interface ExportTextPreviewProps {
   stats: ExportStats;
@@ -7,7 +8,7 @@ interface ExportTextPreviewProps {
 }
 
 export function ExportTextPreview({ stats, dailyDetails }: ExportTextPreviewProps) {
-  const { startDate, endDate, totalDays, totalSets } = stats;
+  const { startDate, endDate } = stats;
 
   // 格式化日期顯示
   const formatDate = (dateStr: string) => {
@@ -31,9 +32,7 @@ export function ExportTextPreview({ stats, dailyDetails }: ExportTextPreviewProp
           <Text className="text-gray-500 text-sm">
             {formatDate(startDate)} ~ {formatDate(endDate)}
           </Text>
-          <Text className="text-gray-600 text-sm mt-1">
-            共訓練 {totalDays} 天 ｜ 總計 {totalSets} 組
-          </Text>
+          <Text className="text-gray-600 text-sm mt-1">{formatExportSummary(stats)}</Text>
         </View>
 
         {/* 每日明細 */}
@@ -49,10 +48,7 @@ export function ExportTextPreview({ stats, dailyDetails }: ExportTextPreviewProp
             {/* 項目列表 */}
             {day.items.map((item, index) => (
               <View key={`${day.date}-${index}`} className="ml-2 mb-1">
-                <Text className="text-gray-600">
-                  • {item.exerciseName}｜{item.sets}組 × {item.reps}下
-                  {item.weight != null && item.weight > 0 && `｜${item.weight}kg`}
-                </Text>
+                <Text className="text-gray-600">• {formatDetailItem(item)}</Text>
                 {item.notes && <Text className="text-gray-400 text-xs ml-3">└ {item.notes}</Text>}
               </View>
             ))}
@@ -65,14 +61,14 @@ export function ExportTextPreview({ stats, dailyDetails }: ExportTextPreviewProp
 
 // 產生分享用的純文字
 export function generateExportText(stats: ExportStats, dailyDetails: DailyDetail[]): string {
-  const { startDate, endDate, totalDays, totalSets } = stats;
+  const { startDate, endDate } = stats;
 
   const formatDate = (dateStr: string) => dateStr.replace(/-/g, "/");
 
   const lines: string[] = [
     "📋 訓練紀錄",
     `${formatDate(startDate)} ~ ${formatDate(endDate)}`,
-    `共訓練 ${totalDays} 天 ｜ 總計 ${totalSets} 組`,
+    formatExportSummary(stats),
     "",
   ];
 
@@ -82,11 +78,7 @@ export function generateExportText(stats: ExportStats, dailyDetails: DailyDetail
     lines.push("────────────────────");
 
     for (const item of day.items) {
-      let line = `• ${item.exerciseName}｜${item.sets}組 × ${item.reps}下`;
-      if (item.weight != null && item.weight > 0) {
-        line += `｜${item.weight}kg`;
-      }
-      lines.push(line);
+      lines.push(`• ${formatDetailItem(item)}`);
 
       if (item.notes) {
         lines.push(`  └ ${item.notes}`);

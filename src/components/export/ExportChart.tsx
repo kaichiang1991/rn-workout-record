@@ -1,6 +1,7 @@
 import { View, Text } from "react-native";
 import { forwardRef } from "react";
 import type { ExportStats } from "@/hooks/useExportData";
+import { formatExportSummary, formatExerciseStat } from "@/utils/exportFormat";
 
 interface ExportChartProps {
   stats: ExportStats;
@@ -19,7 +20,7 @@ const COLORS = [
 ];
 
 export const ExportChart = forwardRef<View, ExportChartProps>(({ stats }, ref) => {
-  const { startDate, endDate, totalDays, totalSets, exerciseStats } = stats;
+  const { startDate, endDate, exerciseStats } = stats;
 
   // 找出最大組數用於計算長條比例
   const maxSets = Math.max(...exerciseStats.map((e) => e.totalSets), 1);
@@ -45,10 +46,7 @@ export const ExportChart = forwardRef<View, ExportChartProps>(({ stats }, ref) =
         <Text className="text-gray-500 text-center text-sm">
           {formatDate(startDate)} ~ {formatDate(endDate)}
         </Text>
-        <Text className="text-gray-600 text-center mt-2">
-          共訓練 <Text className="font-bold text-primary-600">{totalDays}</Text> 天{" ｜ "}
-          總計 <Text className="font-bold text-primary-600">{totalSets}</Text> 組
-        </Text>
+        <Text className="text-gray-600 text-center mt-2">{formatExportSummary(stats)}</Text>
       </View>
 
       {/* 分隔線 */}
@@ -67,9 +65,7 @@ export const ExportChart = forwardRef<View, ExportChartProps>(({ stats }, ref) =
                 <Text className="text-gray-700 font-medium" numberOfLines={1}>
                   {exercise.exerciseName}
                 </Text>
-                <Text className="text-gray-500 text-sm">
-                  {exercise.totalSets}組 / {exercise.totalReps}下
-                </Text>
+                <Text className="text-gray-500 text-sm">{formatExerciseStat(exercise)}</Text>
               </View>
 
               {/* 長條 */}

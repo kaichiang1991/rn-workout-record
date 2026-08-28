@@ -8,6 +8,7 @@ export interface ExerciseExportStat {
   exerciseName: string;
   totalSets: number;
   totalReps: number;
+  totalDuration: number; // 時間型訓練的總秒數
 }
 
 export interface ExportStats {
@@ -15,6 +16,7 @@ export interface ExportStats {
   endDate: string;
   totalDays: number;
   totalSets: number;
+  totalDuration: number; // 時間型訓練的總秒數
   exerciseStats: ExerciseExportStat[];
 }
 
@@ -24,6 +26,7 @@ export interface DailyDetailItem {
   sets: number;
   reps: number;
   weight: number | null;
+  duration: number | null; // 時間型訓練的總秒數，null 表示次數型
   notes: string | null;
 }
 
@@ -77,6 +80,7 @@ export function useExportData() {
               endDate: toLocalDateKey(endDate),
               totalDays: 0,
               totalSets: 0,
+              totalDuration: 0,
               exerciseStats: [],
             },
             dailyDetails: [],
@@ -101,31 +105,44 @@ export function useExportData() {
         const uniqueDays = new Set<string>();
         const exerciseStatsMap = new Map<
           number,
-          { exerciseName: string; totalSets: number; totalReps: number }
+          { exerciseName: string; totalSets: number; totalReps: number; totalDuration: number }
         >();
 
         let totalSets = 0;
+        let totalDuration = 0;
 
         for (const session of sessions) {
           const dateKey = toLocalDateKey(session.date);
           uniqueDays.add(dateKey);
 
           const sessionSets = setsBySession.get(session.id) || [];
+          const isTimeMode = session.duration !== null;
           const setCount = sessionSets.length || session.setCount || 0;
           const repsCount =
             sessionSets.reduce((sum, s) => sum + (s.reps || 0), 0) || session.reps || 0;
+          // 時間型：duration 為每組秒數，總時間需乘上組數
+          const durationSecs = isTimeMode ? (session.duration || 0) * (session.setCount || 1) : 0;
 
-          totalSets += setCount;
+          if (isTimeMode) {
+            totalDuration += durationSecs;
+          } else {
+            totalSets += setCount;
+          }
 
           const existing = exerciseStatsMap.get(session.exerciseId);
           if (existing) {
-            existing.totalSets += setCount;
-            existing.totalReps += repsCount;
+            if (isTimeMode) {
+              existing.totalDuration += durationSecs;
+            } else {
+              existing.totalSets += setCount;
+              existing.totalReps += repsCount;
+            }
           } else {
             exerciseStatsMap.set(session.exerciseId, {
               exerciseName: exerciseMap.get(session.exerciseId) || "未知項目",
-              totalSets: setCount,
-              totalReps: repsCount,
+              totalSets: isTimeMode ? 0 : setCount,
+              totalReps: isTimeMode ? 0 : repsCount,
+              totalDuration: durationSecs,
             });
           }
         }
@@ -135,7 +152,7 @@ export function useExportData() {
             exerciseId,
             ...data,
           }))
-          .sort((a, b) => b.totalSets - a.totalSets);
+          .sort((a, b) => b.totalSets - a.totalSets || b.totalDuration - a.totalDuration);
 
         // ===== 計算每日明細 =====
         // 依日期分組，再依 exerciseId + weight 分組
@@ -150,6 +167,7 @@ export function useExportData() {
                 sets: number;
                 reps: number;
                 weight: number | null;
+                duration: number | null;
                 notes: string | null;
               }
             >;
@@ -168,6 +186,32 @@ export function useExportData() {
           }
 
           const dayData = dailyMap.get(dateKey)!;
+
+          // 時間型紀錄：獨立分組並累計總時間
+          if (session.duration !== null) {
+            const itemKey = `${session.exerciseId}-time`;
+            const exerciseName = exerciseMap.get(session.exerciseId) || "未知項目";
+            const durationSecs = session.duration * (session.setCount || 1);
+
+            const existingItem = dayData.items.get(itemKey);
+            if (existingItem) {
+              existingItem.sets += session.setCount || 1;
+              existingItem.duration = (existingItem.duration || 0) + durationSecs;
+              if (session.notes && !existingItem.notes) {
+                existingItem.notes = session.notes;
+              }
+            } else {
+              dayData.items.set(itemKey, {
+                exerciseName,
+                sets: session.setCount || 1,
+                reps: 0,
+                weight: null,
+                duration: durationSecs,
+                notes: session.notes,
+              });
+            }
+            continue;
+          }
 
           // 依據每組的重量分組
           if (sessionSets.length > 0) {
@@ -202,6 +246,7 @@ export function useExportData() {
                   sets: data.sets,
                   reps: data.reps,
                   weight,
+                  duration: null,
                   notes: session.notes,
                 });
               }
@@ -225,6 +270,7 @@ export function useExportData() {
                 sets: session.setCount || 1,
                 reps: session.reps || 0,
                 weight,
+                duration: null,
                 notes: session.notes,
               });
             }
@@ -249,6 +295,7 @@ export function useExportData() {
             endDate: toLocalDateKey(endDate),
             totalDays: uniqueDays.size,
             totalSets,
+            totalDuration,
             exerciseStats,
           },
           dailyDetails,

@@ -29,6 +29,24 @@ echo -e "${YELLOW}📱 裝置 ID: $DEVICE_ID${NC}"
 # 進入 ios 目錄
 cd "$(dirname "$0")/../ios"
 
+# 刪除本 app 的快取 provisioning profile,強制 Xcode 重新申請新的 7 天免費簽名 profile
+# (免費帳號的 profile 有效期為簽發起 7 天;若不刪除,xcodebuild 會重用尚未過期的舊 profile,到期日不會刷新)
+BUNDLE_ID="com.kai.workout-record"
+PROFILE_DIRS=(
+    "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+    "$HOME/Library/MobileDevice/Provisioning Profiles"
+)
+for dir in "${PROFILE_DIRS[@]}"; do
+    [ -d "$dir" ] || continue
+    for profile in "$dir"/*.mobileprovision; do
+        [ -e "$profile" ] || continue
+        if security cms -D -i "$profile" 2>/dev/null | grep -q "$BUNDLE_ID"; then
+            echo -e "${YELLOW}🗑  移除舊 provisioning profile: $(basename "$profile")${NC}"
+            rm "$profile"
+        fi
+    done
+done
+
 # 構建 (包含自動簽名更新)
 echo -e "${YELLOW}🔨 正在構建 ($CONFIGURATION)...${NC}"
 xcodebuild \
