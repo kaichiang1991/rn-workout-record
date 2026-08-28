@@ -4,12 +4,11 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Platform,
   Alert,
   ActivityIndicator,
   Share,
 } from "react-native";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { ConfirmDateTimePicker } from "@/components/ConfirmDateTimePicker";
 import * as Sharing from "expo-sharing";
 import { captureRef } from "react-native-view-shot";
 import { useExportData, ExportData } from "@/hooks/useExportData";
@@ -107,25 +106,21 @@ export default function ExportScreen() {
     setEndDate(end);
   };
 
-  const handleStartDateChange = (_event: DateTimePickerEvent, date?: Date) => {
-    setShowStartPicker(Platform.OS === "ios");
-    if (date) {
-      setStartDate(date);
-      setSelectedPreset(-1);
-      if (date > endDate) {
-        setEndDate(date);
-      }
+  const handleStartDateConfirm = (date: Date) => {
+    setShowStartPicker(false);
+    setStartDate(date);
+    setSelectedPreset(-1);
+    if (date > endDate) {
+      setEndDate(date);
     }
   };
 
-  const handleEndDateChange = (_event: DateTimePickerEvent, date?: Date) => {
-    setShowEndPicker(Platform.OS === "ios");
-    if (date) {
-      setEndDate(date);
-      setSelectedPreset(-1);
-      if (date < startDate) {
-        setStartDate(date);
-      }
+  const handleEndDateConfirm = (date: Date) => {
+    setShowEndPicker(false);
+    setEndDate(date);
+    setSelectedPreset(-1);
+    if (date < startDate) {
+      setStartDate(date);
     }
   };
 
@@ -256,24 +251,24 @@ export default function ExportScreen() {
             </View>
 
             {/* 日期選擇器 */}
-            {showStartPicker && (
-              <DateTimePicker
-                value={startDate}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={handleStartDateChange}
-                maximumDate={new Date()}
-              />
-            )}
-            {showEndPicker && (
-              <DateTimePicker
-                value={endDate}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={handleEndDateChange}
-                maximumDate={new Date()}
-              />
-            )}
+            <ConfirmDateTimePicker
+              visible={showStartPicker}
+              value={startDate}
+              mode="date"
+              title="起始日期"
+              maximumDate={new Date()}
+              onConfirm={handleStartDateConfirm}
+              onCancel={() => setShowStartPicker(false)}
+            />
+            <ConfirmDateTimePicker
+              visible={showEndPicker}
+              value={endDate}
+              mode="date"
+              title="結束日期"
+              maximumDate={new Date()}
+              onConfirm={handleEndDateConfirm}
+              onCancel={() => setShowEndPicker(false)}
+            />
           </View>
 
           {/* 格式選擇區 */}

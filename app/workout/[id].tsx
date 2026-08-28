@@ -1,7 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from "react-native";
+/**/ import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { ConfirmDateTimePicker } from "@/components/ConfirmDateTimePicker";
 import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
 import { useExerciseStore } from "@/store/exerciseStore";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -71,21 +71,19 @@ export default function WorkoutDetailScreen() {
     }
   };
 
-  const handleDateChange = (_event: DateTimePickerEvent, date?: Date) => {
+  // 日期確認 → 進入時間選擇；取消 → 中止整個流程
+  const handleDateConfirm = (date: Date) => {
     setShowDatePicker(false);
-    if (date) {
-      setTempDate(date);
-      setShowTimePicker(true);
-    }
+    setTempDate(date);
+    setShowTimePicker(true);
   };
 
-  const handleTimeChange = (_event: DateTimePickerEvent, time?: Date) => {
+  // 時間確認 → 產生待確認的完整日期時間；取消 → 中止，不進入確認區
+  const handleTimeConfirm = (time: Date) => {
     setShowTimePicker(false);
-    if (time) {
-      const finalDate = new Date(tempDate);
-      finalDate.setHours(time.getHours(), time.getMinutes());
-      setPendingDate(finalDate);
-    }
+    const finalDate = new Date(tempDate);
+    finalDate.setHours(time.getHours(), time.getMinutes());
+    setPendingDate(finalDate);
   };
 
   const handleConfirmDate = async () => {
@@ -190,23 +188,23 @@ export default function WorkoutDetailScreen() {
         </View>
 
         {/* 日期時間選擇器 */}
-        {showDatePicker && (
-          <DateTimePicker
-            value={tempDate}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={handleDateChange}
-            maximumDate={new Date()}
-          />
-        )}
-        {showTimePicker && (
-          <DateTimePicker
-            value={tempDate}
-            mode="time"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={handleTimeChange}
-          />
-        )}
+        <ConfirmDateTimePicker
+          visible={showDatePicker}
+          value={tempDate}
+          mode="date"
+          title="選擇日期"
+          maximumDate={new Date()}
+          onConfirm={handleDateConfirm}
+          onCancel={() => setShowDatePicker(false)}
+        />
+        <ConfirmDateTimePicker
+          visible={showTimePicker}
+          value={tempDate}
+          mode="time"
+          title="選擇時間"
+          onConfirm={handleTimeConfirm}
+          onCancel={() => setShowTimePicker(false)}
+        />
 
         {/* 日期修改確認區 */}
         {pendingDate && (

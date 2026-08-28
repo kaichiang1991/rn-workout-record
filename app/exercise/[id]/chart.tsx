@@ -1,7 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { useState } from "react";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { ConfirmDateTimePicker } from "@/components/ConfirmDateTimePicker";
 import { useExerciseStore } from "@/store/exerciseStore";
 import { ProgressTrendChart } from "@/components/charts/ProgressTrendChart";
 import { toLocalDateKey } from "@/utils/date";
@@ -30,24 +30,20 @@ export default function ExerciseChartScreen() {
     });
   };
 
-  const handleStartDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowStartPicker(Platform.OS === "ios");
-    if (selectedDate) {
-      if (selectedDate > endDate) {
-        setEndDate(selectedDate);
-      }
-      setStartDate(selectedDate);
-    }
-  };
-
-  const handleEndDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowEndPicker(Platform.OS === "ios");
-    if (selectedDate) {
-      if (selectedDate < startDate) {
-        setStartDate(selectedDate);
-      }
+  const handleStartDateConfirm = (selectedDate: Date) => {
+    setShowStartPicker(false);
+    if (selectedDate > endDate) {
       setEndDate(selectedDate);
     }
+    setStartDate(selectedDate);
+  };
+
+  const handleEndDateConfirm = (selectedDate: Date) => {
+    setShowEndPicker(false);
+    if (selectedDate < startDate) {
+      setStartDate(selectedDate);
+    }
+    setEndDate(selectedDate);
   };
 
   if (!exercise) {
@@ -97,24 +93,24 @@ export default function ExerciseChartScreen() {
           />
 
           {/* DateTimePicker modals */}
-          {showStartPicker && (
-            <DateTimePicker
-              value={startDate}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={handleStartDateChange}
-              maximumDate={today}
-            />
-          )}
-          {showEndPicker && (
-            <DateTimePicker
-              value={endDate}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={handleEndDateChange}
-              maximumDate={today}
-            />
-          )}
+          <ConfirmDateTimePicker
+            visible={showStartPicker}
+            value={startDate}
+            mode="date"
+            title="開始日期"
+            maximumDate={today}
+            onConfirm={handleStartDateConfirm}
+            onCancel={() => setShowStartPicker(false)}
+          />
+          <ConfirmDateTimePicker
+            visible={showEndPicker}
+            value={endDate}
+            mode="date"
+            title="結束日期"
+            maximumDate={today}
+            onConfirm={handleEndDateConfirm}
+            onCancel={() => setShowEndPicker(false)}
+          />
         </View>
       </ScrollView>
     </>
