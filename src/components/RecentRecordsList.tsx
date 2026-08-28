@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { WorkoutSession } from "@/db/client";
 import { DIFFICULTY_LEVELS } from "@/utils/constants";
@@ -8,6 +7,8 @@ import { Icon } from "./Icon";
 interface RecentRecordsListProps {
   records: WorkoutSession[];
   onSelect: (record: WorkoutSession) => void;
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
 const getDifficultyColor = (difficulty: number | null): string => {
@@ -16,14 +17,12 @@ const getDifficultyColor = (difficulty: number | null): string => {
   return level?.color || "#9ca3af";
 };
 
-export function RecentRecordsList({ records, onSelect }: RecentRecordsListProps) {
-  const [collapsed, setCollapsed] = useState(false);
-
-  // 切換運動項目（records 更新）時重新展開列表
-  useEffect(() => {
-    setCollapsed(false);
-  }, [records]);
-
+export function RecentRecordsList({
+  records,
+  onSelect,
+  collapsed,
+  onCollapsedChange,
+}: RecentRecordsListProps) {
   if (records.length === 0) {
     return null;
   }
@@ -32,7 +31,7 @@ export function RecentRecordsList({ records, onSelect }: RecentRecordsListProps)
     <View className="mt-3 bg-white rounded-xl p-4">
       <TouchableOpacity
         className="flex-row items-center justify-between"
-        onPress={() => setCollapsed((prev) => !prev)}
+        onPress={() => onCollapsedChange(!collapsed)}
         activeOpacity={0.6}
       >
         <Text className="text-sm text-gray-500">最近紀錄（點選帶入）</Text>

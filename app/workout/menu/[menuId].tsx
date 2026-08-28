@@ -63,6 +63,7 @@ export default function MenuWorkoutScreen() {
   const [saving, setSaving] = useState(false);
   const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
   const [hasSelectedRecentRecord, setHasSelectedRecentRecord] = useState(false);
+  const [recentCollapsed, setRecentCollapsed] = useState(false);
   const [showProgressList, setShowProgressList] = useState(false);
 
   const menu = menus.find((m) => m.id === menuId);
@@ -134,8 +135,17 @@ export default function MenuWorkoutScreen() {
     setDifficulty(3);
     setNotes("");
     setHasSelectedRecentRecord(false);
+    setRecentCollapsed(false);
     setShowRecordModal(true);
   };
+
+  // 包裝表單欄位的 setter：開始輸入任一欄位時自動收合最近紀錄
+  const withAutoCollapse =
+    <T,>(setter: (value: T) => void) =>
+    (value: T) => {
+      setRecentCollapsed(true);
+      setter(value);
+    };
 
   const handleExerciseSwap = async (exercise: Exercise) => {
     setCurrentExercise({ id: exercise.id, name: exercise.name });
@@ -150,6 +160,7 @@ export default function MenuWorkoutScreen() {
     setMinutes("");
     setSeconds("");
     setSetCount(0);
+    setRecentCollapsed(false);
   };
 
   const handleSelectRecentRecord = (record: WorkoutSession) => {
@@ -530,28 +541,33 @@ export default function MenuWorkoutScreen() {
 
             {/* 最近紀錄 */}
             {recentRecords.length > 0 && !hasSelectedRecentRecord && (
-              <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
+              <RecentRecordsList
+                records={recentRecords}
+                onSelect={handleSelectRecentRecord}
+                collapsed={recentCollapsed}
+                onCollapsedChange={setRecentCollapsed}
+              />
             )}
 
             <WorkoutRecordForm
               trackingMode={trackingMode}
-              onTrackingModeChange={setTrackingMode}
+              onTrackingModeChange={withAutoCollapse(setTrackingMode)}
               minutes={minutes}
-              onMinutesChange={setMinutes}
+              onMinutesChange={withAutoCollapse(setMinutes)}
               seconds={seconds}
-              onSecondsChange={setSeconds}
+              onSecondsChange={withAutoCollapse(setSeconds)}
               isBodyweight={isBodyweight}
-              onIsBodyweightChange={setIsBodyweight}
+              onIsBodyweightChange={withAutoCollapse(setIsBodyweight)}
               weight={weight}
-              onWeightChange={setWeight}
+              onWeightChange={withAutoCollapse(setWeight)}
               reps={reps}
-              onRepsChange={setReps}
+              onRepsChange={withAutoCollapse(setReps)}
               setCount={setCount}
-              onSetCountChange={setSetCount}
+              onSetCountChange={withAutoCollapse(setSetCount)}
               difficulty={difficulty}
-              onDifficultyChange={setDifficulty}
+              onDifficultyChange={withAutoCollapse(setDifficulty)}
               notes={notes}
-              onNotesChange={setNotes}
+              onNotesChange={withAutoCollapse(setNotes)}
             />
           </ScrollView>
 

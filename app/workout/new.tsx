@@ -23,6 +23,7 @@ export default function NewWorkoutScreen() {
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
   const [recentRecords, setRecentRecords] = useState<WorkoutSession[]>([]);
   const [hasSelectedRecentRecord, setHasSelectedRecentRecord] = useState(false);
+  const [recentCollapsed, setRecentCollapsed] = useState(false);
   const [trackingMode, setTrackingMode] = useState<TrackingMode>("reps");
   const [isBodyweight, setIsBodyweight] = useState(false);
   const [weight, setWeight] = useState("");
@@ -38,7 +39,16 @@ export default function NewWorkoutScreen() {
     setSelectedBodyPart(bodyPart);
     setSelectedExerciseId(null);
     setHasSelectedRecentRecord(false);
+    setRecentCollapsed(false);
   };
+
+  // 包裝表單欄位的 setter：開始輸入任一欄位時自動收合最近紀錄
+  const withAutoCollapse =
+    <T,>(setter: (value: T) => void) =>
+    (value: T) => {
+      setRecentCollapsed(true);
+      setter(value);
+    };
 
   useEffect(() => {
     const loadRecentRecords = async () => {
@@ -176,6 +186,7 @@ export default function NewWorkoutScreen() {
                     onPress={() => {
                       setSelectedExerciseId(exercise.id);
                       setHasSelectedRecentRecord(false);
+                      setRecentCollapsed(false);
                     }}
                   >
                     <Text
@@ -192,30 +203,35 @@ export default function NewWorkoutScreen() {
               </ScrollView>
             )}
             {selectedExerciseId && recentRecords.length > 0 && !hasSelectedRecentRecord && (
-              <RecentRecordsList records={recentRecords} onSelect={handleSelectRecentRecord} />
+              <RecentRecordsList
+                records={recentRecords}
+                onSelect={handleSelectRecentRecord}
+                collapsed={recentCollapsed}
+                onCollapsedChange={setRecentCollapsed}
+              />
             )}
           </View>
 
           {/* 記錄表單 */}
           <WorkoutRecordForm
             trackingMode={trackingMode}
-            onTrackingModeChange={setTrackingMode}
+            onTrackingModeChange={withAutoCollapse(setTrackingMode)}
             minutes={minutes}
-            onMinutesChange={setMinutes}
+            onMinutesChange={withAutoCollapse(setMinutes)}
             seconds={seconds}
-            onSecondsChange={setSeconds}
+            onSecondsChange={withAutoCollapse(setSeconds)}
             isBodyweight={isBodyweight}
-            onIsBodyweightChange={setIsBodyweight}
+            onIsBodyweightChange={withAutoCollapse(setIsBodyweight)}
             weight={weight}
-            onWeightChange={setWeight}
+            onWeightChange={withAutoCollapse(setWeight)}
             reps={reps}
-            onRepsChange={setReps}
+            onRepsChange={withAutoCollapse(setReps)}
             setCount={setCount}
-            onSetCountChange={setSetCount}
+            onSetCountChange={withAutoCollapse(setSetCount)}
             difficulty={difficulty}
-            onDifficultyChange={setDifficulty}
+            onDifficultyChange={withAutoCollapse(setDifficulty)}
             notes={notes}
-            onNotesChange={setNotes}
+            onNotesChange={withAutoCollapse(setNotes)}
           />
         </View>
       </ScrollView>
