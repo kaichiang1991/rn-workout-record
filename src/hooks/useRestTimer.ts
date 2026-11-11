@@ -6,6 +6,7 @@ import {
   cancelNotification,
   playAlarmFeedback,
 } from "@/utils/notifications";
+import { startRestLiveActivity, stopRestLiveActivity } from "@/utils/liveActivity";
 import { useSettingsStore } from "@/store/settingsStore";
 
 interface UseRestTimerReturn {
@@ -25,6 +26,14 @@ export function useRestTimer(): UseRestTimerReturn {
 
   const notificationIdRef = useRef<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const liveActivityIdRef = useRef<string | null>(null);
+
+  const endLiveActivity = useCallback(() => {
+    if (liveActivityIdRef.current) {
+      stopRestLiveActivity(liveActivityIdRef.current);
+      liveActivityIdRef.current = null;
+    }
+  }, []);
 
   const cancel = useCallback(() => {
     // Clear state
@@ -38,12 +47,15 @@ export function useRestTimer(): UseRestTimerReturn {
       notificationIdRef.current = null;
     }
 
+    // End Live Activity (Dynamic Island)
+    endLiveActivity();
+
     // Clear interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, []);
+  }, [endLiveActivity]);
 
   const start = async (duration: number) => {
     // 1. Request notification permission
@@ -55,7 +67,12 @@ export function useRestTimer(): UseRestTimerReturn {
     setTimeLeft(duration);
     setIsActive(true);
 
-    // 3. Schedule local notification (background backup)
+    // 3. Show countdown on Lock Screen / Dynamic Island (iOS only)
+    // Restarting during rest replaces the previous activity
+    endLiveActivity();
+    liveActivityIdRef.current = startRestLiveActivity(end);
+
+    // 4. Schedule local notification (background backup)
     if (hasPermission) {
       const notifId = await scheduleRestEndNotification(duration);
       notificationIdRef.current = notifId;
@@ -100,6 +117,8 @@ export function useRestTimer(): UseRestTimerReturn {
           notificationIdRef.current = null;
         }
 
+        endLiveActivity();
+
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -116,7 +135,7 @@ export function useRestTimer(): UseRestTimerReturn {
         intervalRef.current = null;
       }
     };
-  }, [endTime, cancel, alarmVolume]);
+  }, [endTime, cancel, alarmVolume, endLiveActivity]);
 
   // Listen to App state changes
   useEffect(() => {
@@ -142,8 +161,9 @@ export function useRestTimer(): UseRestTimerReturn {
       if (notificationIdRef.current) {
         cancelNotification(notificationIdRef.current);
       }
+      endLiveActivity();
     };
-  }, []);
+  }, [endLiveActivity]);
 
   return {
     timeLeft,
